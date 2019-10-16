@@ -1,78 +1,114 @@
-﻿{
-  "$schema": "https://statics.teams.microsoft.com/sdk/v1.0/manifest/MicrosoftTeams.schema.json",
-  "manifestVersion": "1.3",
-  "version": "1.0.0",
-  "id": "00000000-0000-0000-0000-000000000000",
-  "packageName": "com.contoso.helloworld",
-  "developer": {
-    "name": "Contoso",
-    "websiteUrl": "https://www.microsoft.com",
-    "privacyUrl": "https://www.microsoft.com/privacy",
-    "termsOfUseUrl": "https://www.microsoft.com/termsofuse"
-  },
-  "name": {
-    "short": "Hello World",
-    "full": "Hello World App"
-  },
-  "description": {
-    "short": "Hello World App for Microsoft Teams",
-    "full": "This sample app provides a very simple app. You can extend this to add more content and capabilities."
-  },
-  "icons": {
-    "outline": "contoso20x20.png",
-    "color": "contoso96x96.png"
-  },
-  "accentColor": "#60A18E",
-  "staticTabs": [
-    {
-      "entityId": "com.contoso.helloworld.hellotab",
-      "name": "Hello Tab",
-      "contentUrl": "https://yourteamsapp.ngrok.io/hello",
-      "scopes": [
-        "personal"
-      ]
-    }
-  ],
-  "configurableTabs": [
-    {
-      "configurationUrl": "https://yourteamsapp.ngrok.io/configure",
-      "canUpdateConfiguration": true,
-      "scopes": [
-        "team"
-      ]
-    }
-  ],
-  "bots": [
-    {
-      "botId": "00000000-0000-0000-0000-000000000000",
-      "needsChannelSelector": false,
-      "isNotificationOnly": false,
-      "scopes": [
-        "team",
-        "personal"
-      ]
-    }
-  ],
-  "composeExtensions": [
-    {
-      "botId": "00000000-0000-0000-0000-000000000000",
-      "commands": [
+{
+    "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.5/MicrosoftTeams.schema.json",
+    "manifestVersion": "1.5",
+    "version": "1.0.0",
+    "id": "e3a901ab-d15d-4dea-b1b5-32282d8b3f87",
+    "packageName": "com.contoso.helloworld",
+    "developer": {
+        "name": "Contoso",
+        "websiteUrl": "https://www.microsoft.com",
+        "privacyUrl": "https://www.microsoft.com/privacy",
+        "termsOfUseUrl": "https://www.microsoft.com/termsofuse"
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "name": {
+        "short": "Hello World2",
+        "full": "Hello World App2"
+    },
+    "description": {
+        "short": "Hello World App for Microsoft Teams",
+        "full": "This sample app provides a very simple app. You can extend this to add more content and capabilities."
+    },
+    "accentColor": "#60A18E",
+    "staticTabs": [
         {
-          "id": "getRandomText",
-          "description": "Gets some random text and images that you can insert in messages for fun.",
-          "title": "Get some random text for fun",
-          "initialRun": true,
-          "parameters": [
-            {
-              "name": "cardTitle",
-              "description": "Card title to use",
-              "title": "Card title"
-            }
-          ]
+            "entityId": "com.contoso.helloworld.hellotab",
+            "name": "Hello Tab",
+            "contentUrl": "https://808e656d.ngrok.io/hello",
+            "scopes": [
+                "personal"
+            ]
         }
-      ]
-    }
-  ],
-  "permissions": [],
-  "validDomains": []
+    ],
+    "bots": [
+        {
+            "botId": "cb38cf54-ac89-4a7a-9ea3-095d3d080037",
+            "scopes": [
+                "team",
+                "groupchat",
+                "personal"
+            ],
+            "commandLists": [
+                {
+                    "scopes": [
+                        "personal"
+                    ],
+                    "commands": [
+                        {
+                            "title": "GET /messages",
+                            "description": "asdfadsf"
+                        }
+                    ]
+                },
+                {
+                    "scopes": [
+                        "team"
+                    ],
+                    "commands": [
+                        {
+                            "title": "GET /messages",
+                            "description": "asdfadsf"
+                        }
+                    ]
+                },
+                {
+                    "scopes": [
+                        "groupchat"
+                    ],
+                    "commands": [
+                        {
+                            "title": "GET /messages",
+                            "description": "asdfadsf"
+                        }
+                    ]
+                }
+            ],
+            "supportsFiles": false,
+            "isNotificationOnly": false
+        }
+    ],
+    "composeExtensions": [
+        {
+            "botId": "00000000-0000-0000-0000-000000000000",
+            "canUpdateConfiguration": false,
+            "commands": [
+                {
+                    "id": "getRandomText",
+                    "type": "query",
+                    "title": "Get some random text for fun",
+                    "description": "Gets some random text and images that you can insert in messages for fun.",
+                    "initialRun": true,
+                    "fetchTask": false,
+                    "parameters": [
+                        {
+                            "name": "cardTitle",
+                            "title": "Card title",
+                            "description": "Card title to use",
+                            "inputType": "text"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "permissions": [
+        "identity",
+        "messageTeamMembers"
+    ],
+    "validDomains": [
+        "808e656d.ngrok.io"
+    ]
 }
