@@ -1,6 +1,16 @@
-﻿<div class="font-semibold font-title">
+﻿@model Microsoft.Teams.Samples.HelloWorld.Web.Controllers.TeamAndChannel
+<div class="font-semibold font-title">
     This is our first tab
 </div>
 <p>
     Welcome to Microsoft Teams Hello World sample app (C#)
+</p>
+<p>
+Team = @Model.teamId
+</p>
+<p>
+    channel = @Model.channelId
+</p>
+<p>
+    messages = @Model.message
 </p>

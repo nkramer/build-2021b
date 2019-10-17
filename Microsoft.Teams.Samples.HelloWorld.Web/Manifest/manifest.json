@@ -33,6 +33,15 @@
     "full": "This sample app provides a very simple app. You can extend this to add more content and capabilities."
   },
   "accentColor": "#60A18E",
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://808e656d.ngrok.io/configure",
+      "canUpdateConfiguration": false,
+      "scopes": [
+        "team"
+      ]
+    }
+  ],
   "staticTabs": [
     {
       "entityId": "com.contoso.helloworld.hellotab",

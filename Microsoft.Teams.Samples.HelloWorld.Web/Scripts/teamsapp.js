@@ -58,6 +58,6 @@
     var tabChoice = document.getElementById('tabChoice');
     var selectedTab = tabChoice[tabChoice.selectedIndex].value;
 
-    return window.location.protocol + '//' + window.location.host + '/' + selectedTab;
+      return window.location.protocol + '//' + window.location.host + '/' + selectedTab + '?teamId={groupId}&channelId={channelId}';
   }
 })();
