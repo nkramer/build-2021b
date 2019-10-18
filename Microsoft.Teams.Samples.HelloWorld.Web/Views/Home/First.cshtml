@@ -78,6 +78,13 @@
         max-width: 775px;
     }
 
+    .reset {
+        max-width: 700px;
+        align-self: flex-end;
+        position: fixed;
+        bottom: 20px;
+    }
+
     .motto {
         font-size: 12pt;
         color: #888888;
@@ -150,6 +157,10 @@ htmlAttributes: null)
         @Html.ActionLink("Click here to sign in", "SignIn", "Account", new { area = "" }, new { @class = "btn btn-primary btn-large" })
     }
 }
+
+@*<div>
+    @Html.ActionLink("Reset", "SignIn", "Account", new { area = "" }, new { @class = "btn btn-primary btn-large " })
+</div>*@
 
 <script>
                                             var x = setInterval(function() {
