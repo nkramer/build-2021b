@@ -8,6 +8,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using FromUriAttribute = System.Web.Http.FromUriAttribute;
+using System.Text.RegularExpressions;
 
 namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 {
@@ -92,7 +93,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 select new Question()
                 {
                     MessageId = m.Id,
-                    Text = m.Body.Content,
+                    Text = StripHTML(m.Body.Content),
                     Votes = m.Reactions.Count()
                 };
             qAndA.Questions = questions.OrderByDescending(m => m.Votes).ToList();
@@ -104,6 +105,11 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             }
 
             //await UpdateCard(qAndA);
+        }
+
+        public static string StripHTML(string input)
+        {
+            return Regex.Replace(input, "<.*?>", String.Empty);
         }
 
         private bool IsQuestion(ChatMessage message)
