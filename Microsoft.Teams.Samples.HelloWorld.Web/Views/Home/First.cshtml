@@ -120,7 +120,12 @@
 linkText: "Mark as answered",
 actionName: "MarkAsAnswered",
 controllerName: "Home",
-routeValues: new { model.teamId, model.channelId, model.messageId, replyId = q.MessageId },
+routeValues: new
+{
+    model.teamId,
+    model.channelId,
+    messageId = q.MessageId
+}, //model.messageId, replyId = q.MessageId },
 htmlAttributes: null)
                     </div>
                 </div>

@@ -61,13 +61,17 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         [Route("first")]
         public async Task<ActionResult> First(
             [FromUri(Name = "teamId")] string teamId,
-            [FromUri(Name = "channelId")] string channelId)
+            [FromUri(Name = "channelId")] string channelId,
+            [FromUri(Name = "skipRefresh")] Nullable<bool> skipRefresh)
         {
             string token = await GetToken();
             GraphServiceClient graph = GetAuthenticatedClient(token);
 
             QandAModel model = GetModel(teamId, channelId,  "");
-            await RefreshQandA(model, graph);
+            if (skipRefresh != true)
+            {
+                await RefreshQandA(model, graph);
+            }
             ViewBag.MyModel = model;
             //return View("QandAView", model);
             return View("First", model);
@@ -77,6 +81,21 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
             //return View(new TeamAndChannel() { teamId = teamId, channelId = channelId,
             //message=messages});
+        }
+
+        [Route("Home/MarkAsAnswered")]
+        public ActionResult MarkAsAnswered(
+            [FromUri(Name = "teamId")] string teamId,
+            [FromUri(Name = "channelId")] string channelId,
+            [FromUri(Name = "messageId")] string messageId)
+            //,
+            //[FromQuery(Name = "replyId")] string replyId)
+        {
+            QandAModel model = GetModel(teamId, channelId, ""); //messageId);
+            //model.IsQuestionAnswered[replyId] = true;
+            model.IsQuestionAnswered[messageId] = true;
+            string url = $"~/First?teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true";
+            return Redirect(url);
         }
 
         public async Task RefreshQandA(QandAModel qAndA, GraphServiceClient graph)
