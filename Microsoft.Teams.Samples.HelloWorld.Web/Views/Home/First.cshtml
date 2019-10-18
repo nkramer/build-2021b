@@ -1,16 +1,153 @@
-﻿@model Microsoft.Teams.Samples.HelloWorld.Web.Controllers.TeamAndChannel
-<div class="font-semibold font-title">
-    This is our first tab
+﻿@model Microsoft.Teams.Samples.HelloWorld.Web.Controllers.QandAModel
+
+<style>
+    .header {
+        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+        line-height: 1.42857143;
+        color: #333;
+        font-size: 27px;
+        margin: 20px;
+        margin-top: 40px
+    }
+
+    .outer {
+        border-radius: 4px;
+        border-style: solid;
+        border-color: #ddd;
+        border-width: 1px;
+        margin: 8px;
+        box-shadow: 0 1px 1px rgba(0,0,0,.05);
+        max-width: 700px;
+        /*border-top: 1px;*/
+        margin-left: 50px;
+    }
+
+    .inner {
+        display: flex;
+        align-items: center;
+        color: #333;
+        background-color: #f5f5f5;
+        border-color: #ddd;
+        /* border-bottom: 0; */
+        padding: 10px 15px;
+        /* border-top-left-radius: 3px; */
+        /* border-top-right-radius: 3px; */
+        /* box-sizing: border-box; */
+        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+        font-size: 14px;
+        line-height: 1.42857143;
+        color: #333;
+    }
+
+    .votes {
+        font-size: 11px;
+        color: #7a7a7a;
+        float: left;
+        display: block;
+        width: 75px;
+        align-items: center;
+        flex-grow: 0;
+    }
+
+    .question {
+        width: 100%;
+        flex-grow: 200;
+    }
+
+    .mark {
+        font-size: 11px;
+        width: 100px;
+    }
+
+        .mark a {
+            color: #7a7a7a;
+        }
+
+            .mark a:hover {
+                color: blue;
+            }
+
+    .banner {
+        display: flex;
+        align-items: baseline;
+        border-style: solid;
+        border-width: 0px;
+        border-bottom-width: 5px;
+        border-color: rgb(242, 139, 58);
+        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+        max-width: 775px;
+    }
+
+    .motto {
+        font-size: 12pt;
+        color: #888888;
+    }
+
+    .brand {
+        font-size: 25px;
+    }
+
+    .brand2 {
+        color: #c47200;
+    }
+
+    .spacer {
+        flex-grow: 200;
+    }
+</style>
+
+<div class="banner">
+    <div class="brand"><span class="brand1">Q&amp;A</span> <span class="brand2">Tracker</span></div>
+    <div class="spacer"></div>
+    <div class="motto">You've got questions? We've got answers!</div>
 </div>
-<p>
-    Welcome to Microsoft Teams Hello World sample app (C#)
-</p>
-<p>
-Team = @Model.teamId
-</p>
-<p>
-    channel = @Model.channelId
-</p>
-<p>
-    messages = @Model.message
-</p>
+
+@{
+                // HACK: Should just be Model, but even accessing that property throws an exception
+                var model = Model; //(BotAuthenticationMSGraph.QandAModel)ViewBag.MyModel;
+                if (model != null)
+                {
+
+        <h2 class="header">Open questions</h2>
+        foreach (var q in model.Questions.Where(q => !model.IsQuestionAnswered[q.MessageId]))
+        {
+            <div class="outer">
+                <div class="inner">
+                    <div class="votes">@q.Votes likes</div>
+                    <div class="question">@q.Text</div>
+                    <div class="mark">
+                        @Html.ActionLink(
+linkText: "Mark as answered",
+actionName: "MarkAsAnswered",
+controllerName: "Home",
+routeValues: new { model.teamId, model.channelId, model.messageId, replyId = q.MessageId },
+htmlAttributes: null)
+                    </div>
+                </div>
+            </div>
+        }
+
+        <h2 class="header">Answered questions</h2>
+        foreach (var q in model.Questions.Where(q => model.IsQuestionAnswered[q.MessageId]))
+        {
+            <div class="outer">
+                <div class="inner">
+                    <div class="votes">@q.Votes likes</div>
+                    <div class="question">@q.Text</div>
+                    <div class="mark">
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        @Html.ActionLink("Click here to sign in", "SignIn", "Account", new { area = "" }, new { @class = "btn btn-primary btn-large" })
+    }
+}
+
+<script>
+                                            var x = setInterval(function() {
+//                                                window.location.reload(true);
+                                            }, 10 * 1000); // 10s
+</script>
