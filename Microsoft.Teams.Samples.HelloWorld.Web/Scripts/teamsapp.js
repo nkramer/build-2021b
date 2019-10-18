@@ -59,5 +59,21 @@
     var selectedTab = tabChoice[tabChoice.selectedIndex].value;
 
       return window.location.protocol + '//' + window.location.host + '/' + selectedTab + '?teamId={groupId}&channelId={channelId}';
-  }
+    }
+
+
 })();
+
+function doAuth() {
+    microsoftTeams.authentication.authenticate({
+        url: window.location.origin + "/Auth", //"/tab-auth/simple-start",
+        width: 600,
+        height: 535,
+        successCallback: function (result) {
+            getUserProfile(result.accessToken);
+        },
+        failureCallback: function (reason) {
+            handleAuthError(reason);
+        }
+    });
+}

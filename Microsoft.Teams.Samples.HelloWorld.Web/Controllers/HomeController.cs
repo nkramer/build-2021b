@@ -52,6 +52,14 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             return View();
         }
 
+        [Route("Auth")]
+        public ActionResult Auth()
+        {
+            return View("Auth");
+        }
+
+
+
         [Route("hello")]
         public ActionResult Hello()
         {

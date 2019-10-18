@@ -2,18 +2,9 @@
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.5/MicrosoftTeams.schema.json",
   "manifestVersion": "devPreview",
 
-  "webApplicationInfo": {
-    "id": "cb38cf54-ac89-4a7a-9ea3-095d3d080037",
-    "resource": "https://AkjRscBasedStoreApp",
-    "applicationPermissions": [
-      "TeamSettings.Read.Group",
-      "ChannelMessage.Read.Group"
-    ]
-  },
-
   "version": "1.0.0",
-  "id": "e3a901ab-d15d-4dea-b1b5-32282d8b3f87",
-  "packageName": "com.contoso.helloworld",
+  "id": "42eaaa11-7350-429f-a6ed-ddba0a0b77cc",
+  "packageName": "com.contoso.helloworld-norsc",
   "developer": {
     "name": "Contoso",
     "websiteUrl": "https://www.microsoft.com",
@@ -25,8 +16,8 @@
     "color": "contoso96x96.png"
   },
   "name": {
-    "short": "Q&A Tracker",
-    "full": "Q&A Tracker"
+    "short": "Q&A Tracker (before)",
+    "full": "Q&A Tracker (before)"
   },
   "description": {
     "short": "Track questions and answers",
