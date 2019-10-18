@@ -133,6 +133,8 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
         private bool IsQuestion(ChatMessage message)
         {
+            if (!StripHTML(message.Body.Content).Contains("?")) // no ? in message
+                return false;
             if (message.From.User == null)  // sender is bot
                 return false;
             if (message.Mentions == null) // no @mention

@@ -25,12 +25,12 @@
     "color": "contoso96x96.png"
   },
   "name": {
-    "short": "Hello World2",
-    "full": "Hello World App2"
+    "short": "Q&A Tracker",
+    "full": "Q&A Tracker"
   },
   "description": {
-    "short": "Hello World App for Microsoft Teams",
-    "full": "This sample app provides a very simple app. You can extend this to add more content and capabilities."
+    "short": "Track questions and answers",
+    "full": "This app lets you see the questions that have been asked in a channel, and track which ones have been answered."
   },
   "accentColor": "#60A18E",
   "configurableTabs": [
