@@ -147,6 +147,17 @@ htmlAttributes: null)
                     <div class="votes">@q.Votes likes</div>
                     <div class="question">@q.Text</div>
                     <div class="mark">
+                        @Html.ActionLink(
+linkText: "Re-open",
+actionName: "MarkAsUnanswered",
+controllerName: "Home",
+routeValues: new
+{
+    model.teamId,
+    model.channelId,
+    messageId = q.MessageId
+}, //model.messageId, replyId = q.MessageId },
+htmlAttributes: null)
                     </div>
                 </div>
             </div>
@@ -157,10 +168,6 @@ htmlAttributes: null)
         @Html.ActionLink("Click here to sign in", "SignIn", "Account", new { area = "" }, new { @class = "btn btn-primary btn-large" })
     }
 }
-
-@*<div>
-    @Html.ActionLink("Reset", "SignIn", "Account", new { area = "" }, new { @class = "btn btn-primary btn-large " })
-</div>*@
 
 <script>
                                             var x = setInterval(function() {

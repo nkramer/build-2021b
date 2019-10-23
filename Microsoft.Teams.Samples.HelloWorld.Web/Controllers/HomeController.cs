@@ -98,6 +98,22 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             return Redirect(url);
         }
 
+        [Route("Home/MarkAsUnanswered")]
+        public ActionResult MarkAsUnanswered(
+    [FromUri(Name = "teamId")] string teamId,
+    [FromUri(Name = "channelId")] string channelId,
+    [FromUri(Name = "messageId")] string messageId)
+        //,
+        //[FromQuery(Name = "replyId")] string replyId)
+        {
+            QandAModel model = GetModel(teamId, channelId, ""); //messageId);
+            //model.IsQuestionAnswered[replyId] = true;
+            model.IsQuestionAnswered[messageId] = false;
+            string url = $"~/First?teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true";
+            return Redirect(url);
+        }
+
+
         public async Task RefreshQandA(QandAModel qAndA, GraphServiceClient graph)
         {
             var msgs = await graph.Teams[qAndA.teamId].Channels[qAndA.channelId]
