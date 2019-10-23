@@ -117,7 +117,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         public async Task RefreshQandA(QandAModel qAndA, GraphServiceClient graph)
         {
             var msgs = await graph.Teams[qAndA.teamId].Channels[qAndA.channelId]
-                .Messages.Request().Top(20).GetAsync();
+                .Messages.Request().Top(30).GetAsync();
             //var msgs = await graph.Teams[qAndA.teamId].Channels[qAndA.channelId]
             //    .Messages[qAndA.messageId].Replies.Request().Top(50).GetAsync();
 
