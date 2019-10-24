@@ -108,28 +108,28 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
         public async Task RefreshQandA(QandAModel qAndA, GraphServiceClient graph)
         {
-            var msgs = await graph.Teams[qAndA.teamId].Channels[qAndA.channelId]
-                .Messages.Request().Top(20).GetAsync();
             //var msgs = await graph.Teams[qAndA.teamId].Channels[qAndA.channelId]
-            //    .Messages[qAndA.messageId].Replies.Request().Top(50).GetAsync();
+            //    .Messages.Request().Top(20).GetAsync();
+            ////var msgs = await graph.Teams[qAndA.teamId].Channels[qAndA.channelId]
+            ////    .Messages[qAndA.messageId].Replies.Request().Top(50).GetAsync();
 
-            // merge w/ existing questions 
-            var questions =
-                from m in msgs
-                where IsQuestion(m)
-                select new Question()
-                {
-                    MessageId = m.Id,
-                    Text = StripHTML(m.Body.Content),
-                    Votes = m.Reactions.Count()
-                };
-            qAndA.Questions = questions.OrderByDescending(m => m.Votes).ToList();
+            //// merge w/ existing questions 
+            //var questions =
+            //    from m in msgs
+            //    where IsQuestion(m)
+            //    select new Question()
+            //    {
+            //        MessageId = m.Id,
+            //        Text = StripHTML(m.Body.Content),
+            //        Votes = m.Reactions.Count()
+            //    };
+            //qAndA.Questions = questions.OrderByDescending(m => m.Votes).ToList();
 
-            foreach (var q in questions)
-            {
-                if (!qAndA.IsQuestionAnswered.ContainsKey(q.MessageId))
-                    qAndA.IsQuestionAnswered[q.MessageId] = false;
-            }
+            //foreach (var q in questions)
+            //{
+            //    if (!qAndA.IsQuestionAnswered.ContainsKey(q.MessageId))
+            //        qAndA.IsQuestionAnswered[q.MessageId] = false;
+            //}
 
             //await UpdateCard(qAndA);
         }

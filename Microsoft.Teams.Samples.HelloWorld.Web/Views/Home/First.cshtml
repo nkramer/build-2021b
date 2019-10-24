@@ -102,7 +102,7 @@
     <div class="motto">You have questions? We have answers!</div>
 </div>
 
-@{
+@*@{
                 // HACK: Should just be Model, but even accessing that property throws an exception
                 var model = Model; //(BotAuthenticationMSGraph.QandAModel)ViewBag.MyModel;
                 if (model != null)
@@ -149,7 +149,7 @@ htmlAttributes: null)
     {
         @Html.ActionLink("Click here to sign in", "SignIn", "Account", new { area = "" }, new { @class = "btn btn-primary btn-large" })
     }
-}
+}*@
 
 <button onclick="doAuth()">Authenticate me</button>
 

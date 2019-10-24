@@ -31,19 +31,22 @@
     saveEvent.notifySuccess();
   });
 
-  // Logic to let the user configure what they want to see in the tab being loaded
-  document.addEventListener('DOMContentLoaded', function () {
-    var tabChoice = document.getElementById('tabChoice');
-    if (tabChoice) {
-      tabChoice.onchange = function () {
-        var selectedTab = this[this.selectedIndex].value;
+    // Logic to let the user configure what they want to see in the tab being loaded
+    document.addEventListener('DOMContentLoaded', function () {
+        var tabChoice = document.getElementById('tabChoice');
+        if (tabChoice) {
+            tabChoice.onchange = function () {
+                var selectedTab = this[this.selectedIndex].value;
 
-        // This API tells Microsoft Teams to enable the 'Save' button. Since Microsoft Teams always assumes
-        // an initial invalid state, without this call the 'Save' button will never be enabled.
-        microsoftTeams.settings.setValidityState(selectedTab === 'first' || selectedTab === 'second');
-      };
-    }
-  });
+                // This API tells Microsoft Teams to enable the 'Save' button. Since Microsoft Teams always assumes
+                // an initial invalid state, without this call the 'Save' button will never be enabled.
+                //microsoftTeams.settings.setValidityState(selectedTab === 'first' || selectedTab === 'second');
+                microsoftTeams.settings.setValidityState(true);
+            };
+        }
+        microsoftTeams.settings.setValidityState(true);
+        //microsoftTeams.settings.setValidityState(true);
+    });
 
   // Set the desired theme
   function setTheme(theme) {
@@ -58,7 +61,7 @@
     var tabChoice = document.getElementById('tabChoice');
     var selectedTab = tabChoice[tabChoice.selectedIndex].value;
 
-      return window.location.protocol + '//' + window.location.host + '/' + selectedTab + '?teamId={groupId}&channelId={channelId}';
+      return window.location.protocol + '//' + window.location.host + '/first?teamId={groupId}&channelId={channelId}';
     }
 
 

@@ -20,13 +20,13 @@
     "full": "Q&A Tracker (before)"
   },
   "description": {
-    "short": "Track questions and answers",
-    "full": "This app lets you see the questions that have been asked in a channel, and track which ones have been answered."
+    "short": "(Before) Track questions and answers",
+    "full": "(Before) This app lets you see the questions that have been asked in a channel, and track which ones have been answered."
   },
   "accentColor": "#60A18E",
   "configurableTabs": [
     {
-      "configurationUrl": "https://808e656d.ngrok.io/configure",
+      "configurationUrl": "https://0e9a3a6f.ngrok.io/configure",
       "canUpdateConfiguration": false,
       "scopes": [
         "team"
@@ -37,7 +37,7 @@
     {
       "entityId": "com.contoso.helloworld.hellotab",
       "name": "Hello Tab",
-      "contentUrl": "https://808e656d.ngrok.io/hello",
+      "contentUrl": "https://0e9a3a6f.ngrok.io/hello",
       "scopes": [
         "personal"
       ]

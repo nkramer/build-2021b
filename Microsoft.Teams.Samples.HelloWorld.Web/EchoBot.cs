@@ -18,23 +18,27 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web
     {
         public static async Task EchoMessage(ConnectorClient connector, Activity activity)
         {
-            if (activity.GetTextWithoutMentions() != "")
+            if (activity is IMessageActivity)
             {
-                string token = await GetToken();
-                GraphServiceClient graph = GetAuthenticatedClient(token);
-                TeamsConnectorClient teamsConnector = connector.GetTeamsConnectorClient();
-                string fakeTeamId = activity.GetChannelData<TeamsChannelData>().Team.Id;
-                string teamId = (await teamsConnector.Teams.FetchTeamDetailsAsync(fakeTeamId)).AadGroupId;
-                string channelId = activity.GetChannelData<TeamsChannelData>().Channel.Id;
+                if (activity.GetTextWithoutMentions() != "")
+                {
+                    string token = await GetToken();
+                    GraphServiceClient graph = GetAuthenticatedClient(token);
+                    TeamsConnectorClient teamsConnector = connector.GetTeamsConnectorClient();
+                    string fakeTeamId = activity.GetChannelData<TeamsChannelData>().Team.Id;
+                    string teamId = (await teamsConnector.Teams.FetchTeamDetailsAsync(fakeTeamId)).AadGroupId;
+                    string channelId = activity.GetChannelData<TeamsChannelData>().Channel.Id;
 
-                string messages = await new HttpHelpers(token).HttpGetJson($"/teams/{teamId}/channels/{channelId}/messages");
-                //string msgs = await GetAllMessages(graph, teamId, channelId);
-                var response = activity.CreateReply("Here you go:\n" + messages);
-                await connector.Conversations.ReplyToActivityWithRetriesAsync(response);
+                    string messages = await new HttpHelpers(token).HttpGetJson($"/teams/{teamId}/channels/{channelId}/messages");
+                    string msgs = await GetAllMessages(graph, teamId, channelId);
+                    var response = activity.CreateReply("Here you go:\n" + messages);
+                    //var response = activity.CreateReply("Bob Smith said:\n" + "See you in Dallas!");
+                    //await connector.Conversations.ReplyToActivityWithRetriesAsync(response);
+                }
+
+                //var reply = activity.CreateReply("You said!: " + activity.GetTextWithoutMentions());
+                //await connector.Conversations.ReplyToActivityWithRetriesAsync(reply);
             }
-
-            var reply = activity.CreateReply("You said!: " + activity.GetTextWithoutMentions());
-            await connector.Conversations.ReplyToActivityWithRetriesAsync(reply);
         }
 
 
