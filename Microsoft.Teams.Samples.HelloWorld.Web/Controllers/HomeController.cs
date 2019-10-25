@@ -33,15 +33,16 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
         public List<Question> Questions = new List<Question>();
         public Dictionary<string, bool> IsQuestionAnswered = new Dictionary<string, bool>(); // maps message id -> isAnswered
+        public string tenantId = "dunno";
         public string messageId = "dunno";
         public string channelId = "dunno";
         public string teamId = "dunno";
         public Activity BotFirstMessage = null;
 
-        public static string Encode(string teamId, string channelId, string msgId)
-            => $"{teamId}__{channelId}__{msgId}".Replace(':', '_'); // avoid asp.net bad chars -- see https://www.hanselman.com/blog/ExperimentsInWackinessAllowingPercentsAnglebracketsAndOtherNaughtyThingsInTheASPNETIISRequestURL.aspx
+        public static string Encode(string tenantId, string teamId, string channelId, string msgId)
+            => $"{tenantId}__{teamId}__{channelId}__{msgId}".Replace(':', '_'); // avoid asp.net bad chars -- see https://www.hanselman.com/blog/ExperimentsInWackinessAllowingPercentsAnglebracketsAndOtherNaughtyThingsInTheASPNETIISRequestURL.aspx
 
-        public string Key => Encode(teamId, channelId, messageId);
+        //public string Key => Encode(teamId, channelId, messageId);
     }
 
     public class HomeController : Controller
@@ -60,14 +61,15 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
         [Route("first")]
         public async Task<ActionResult> First(
+            [FromUri(Name = "tenantId")] string tenantId,
             [FromUri(Name = "teamId")] string teamId,
             [FromUri(Name = "channelId")] string channelId,
             [FromUri(Name = "skipRefresh")] Nullable<bool> skipRefresh)
         {
-            string token = await GetToken();
+            string token = await GetToken(tenantId);
             GraphServiceClient graph = GetAuthenticatedClient(token);
 
-            QandAModel model = GetModel(teamId, channelId,  "");
+            QandAModel model = GetModel(tenantId, teamId, channelId,  "");
             if (skipRefresh != true)
             {
                 await RefreshQandA(model, graph);
@@ -85,13 +87,14 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
         [Route("Home/MarkAsAnswered")]
         public ActionResult MarkAsAnswered(
+            [FromUri(Name = "tenantId")] string tenantId,
             [FromUri(Name = "teamId")] string teamId,
             [FromUri(Name = "channelId")] string channelId,
             [FromUri(Name = "messageId")] string messageId)
             //,
             //[FromQuery(Name = "replyId")] string replyId)
         {
-            QandAModel model = GetModel(teamId, channelId, ""); //messageId);
+            QandAModel model = GetModel(tenantId, teamId, channelId, ""); //messageId);
             //model.IsQuestionAnswered[replyId] = true;
             model.IsQuestionAnswered[messageId] = true;
             string url = $"~/First?teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true";
@@ -100,13 +103,14 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
         [Route("Home/MarkAsUnanswered")]
         public ActionResult MarkAsUnanswered(
-    [FromUri(Name = "teamId")] string teamId,
-    [FromUri(Name = "channelId")] string channelId,
-    [FromUri(Name = "messageId")] string messageId)
+            [FromUri(Name = "tenantId")] string tenantId,
+            [FromUri(Name = "teamId")] string teamId,
+            [FromUri(Name = "channelId")] string channelId,
+            [FromUri(Name = "messageId")] string messageId)
         //,
         //[FromQuery(Name = "replyId")] string replyId)
         {
-            QandAModel model = GetModel(teamId, channelId, ""); //messageId);
+            QandAModel model = GetModel(tenantId, teamId, channelId, ""); //messageId);
             //model.IsQuestionAnswered[replyId] = true;
             model.IsQuestionAnswered[messageId] = false;
             string url = $"~/First?teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true";
@@ -166,9 +170,9 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         }
 
 
-        private QandAModel GetModel(string teamId, string channelId, string messageId)
+        private QandAModel GetModel(string tenantId, string teamId, string channelId, string messageId)
         {
-            string key = QandAModel.Encode(teamId, channelId, messageId);
+            string key = QandAModel.Encode(tenantId, teamId, channelId, messageId);
             QandAModel model;
             if (QandAModel.qAndALookup.ContainsKey(key))
             {
@@ -176,19 +180,19 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             }
             else
             {
-                model = new QandAModel() { teamId = teamId, channelId = channelId, messageId = messageId };
+                model = new QandAModel() { tenantId = tenantId, teamId = teamId, channelId = channelId, messageId = messageId };
                 QandAModel.qAndALookup[key] = model;
             }
             return model;
         }
 
-        private static async Task<string> GetToken()
+        private static async Task<string> GetToken(string tenant)
         {
             string appId = "cb38cf54-ac89-4a7a-9ea3-095d3d080037";// ConfigurationManager.AppSettings["ida:GraphAppId"];
             string redirectUri = ConfigurationManager.AppSettings["ida:RedirectUri"];
             string appSecret = Uri.EscapeDataString("oj/2aJkt391=rZEpIzfxIkvTKbjIKV][");
             //ConfigurationManager.AppSettings["ida:GraphAppPassword"]);
-            string tenant = "139d16b4-7223-43ad-b9a8-674ba63c7924";
+            //string tenant = "139d16b4-7223-43ad-b9a8-674ba63c7924";
 
             string response = await HttpHelpers.POST($"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
                     $"grant_type=client_credentials&client_id={appId}&client_secret={appSecret}"

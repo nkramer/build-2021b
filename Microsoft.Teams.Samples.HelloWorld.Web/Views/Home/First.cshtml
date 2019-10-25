@@ -129,6 +129,7 @@ actionName: "MarkAsAnswered",
 controllerName: "Home",
 routeValues: new
 {
+    model.tenantId,
     model.teamId,
     model.channelId,
     messageId = q.MessageId
@@ -153,6 +154,7 @@ actionName: "MarkAsUnanswered",
 controllerName: "Home",
 routeValues: new
 {
+    model.tenantId,
     model.teamId,
     model.channelId,
     messageId = q.MessageId

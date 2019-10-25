@@ -61,6 +61,7 @@
     var tabChoice = document.getElementById('tabChoice');
     var selectedTab = tabChoice[tabChoice.selectedIndex].value;
 
-      return window.location.protocol + '//' + window.location.host + '/first?teamId={groupId}&channelId={channelId}';
+      // Teams will substitute the values in {}
+      return window.location.protocol + '//' + window.location.host + '/first?tenantId={tid}&teamId={groupId}&channelId={channelId}';
   }
 })();
