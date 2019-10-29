@@ -237,6 +237,8 @@
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
+    <Content Include="Manifest-Azure\contoso20x20.png" />
+    <Content Include="Manifest-Azure\contoso96x96.png" />
     <Content Include="Manifest\contoso20x20.png" />
     <Content Include="Manifest\contoso96x96.png" />
     <Content Include="Scripts\teamsapp.js" />
@@ -257,6 +259,7 @@
   <ItemGroup />
   <ItemGroup>
     <Content Include="Manifest\manifest.json" />
+    <Content Include="Manifest-Azure\manifest.json" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
@@ -304,7 +307,8 @@
     <Error Condition="!Exists('..\packages\Microsoft.Azure.DocumentDB.1.22.0\build\Microsoft.Azure.DocumentDB.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Azure.DocumentDB.1.22.0\build\Microsoft.Azure.DocumentDB.targets'))" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>powershell.exe Compress-Archive -Path \"$(ProjectDir)Manifest\*\" -DestinationPath \"$(TargetDir)helloworldapp.zip\" -Force</PostBuildEvent>
+    <PostBuildEvent>powershell.exe Compress-Archive -Path \"$(ProjectDir)Manifest\*\" -DestinationPath \"$(TargetDir)helloworldapp.zip\" -Force
+powershell.exe Compress-Archive -Path \"$(ProjectDir)Manifest-Azure\*\" -DestinationPath \"$(TargetDir)helloworldapp-azure.zip\" -Force</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

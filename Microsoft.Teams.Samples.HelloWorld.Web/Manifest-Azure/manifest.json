@@ -11,9 +11,9 @@
     ]
   },
 
-  "version": "1.0.1",
-  "id": "55cbeb0e-e7be-4ab3-b9bf-ef919406a846",
-  "packageName": "com.contoso.helloworldngrok",
+  "version": "1.0.0",
+  "id": "55cbeb0e-e7be-4ab3-b9bf-ef919406a849",
+  "packageName": "com.contoso.helloworld-azure",
   "developer": {
     "name": "Contoso",
     "websiteUrl": "https://www.microsoft.com",
@@ -25,8 +25,8 @@
     "color": "contoso96x96.png"
   },
   "name": {
-    "short": "Q&A Tracker (ngrok)",
-    "full": "Q&A Tracker (ngrok)"
+    "short": "Q&A Tracker (Azure)",
+    "full": "Q&A Tracker (Azure)"
   },
   "description": {
     "short": "Track questions and answers",
@@ -35,7 +35,7 @@
   "accentColor": "#60A18E",
   "configurableTabs": [
     {
-      "configurationUrl": "https://8b2c607d.ngrok.io/configure",
+      "configurationUrl": "https://nkramerqnaapp.azurewebsites.net/configure",
       "canUpdateConfiguration": false,
       "scopes": [
         "team"
@@ -46,7 +46,7 @@
     {
       "entityId": "com.contoso.helloworld.hellotab",
       "name": "Hello Tab",
-      "contentUrl": "https://8b2c607d.ngrok.io/hello",
+      "contentUrl": "https://nkramerqnaapp.azurewebsites.net/hello",
       "scopes": [
         "personal"
       ]
