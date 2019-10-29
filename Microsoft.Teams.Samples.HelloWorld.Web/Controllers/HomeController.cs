@@ -97,7 +97,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             QandAModel model = GetModel(tenantId, teamId, channelId, ""); //messageId);
             //model.IsQuestionAnswered[replyId] = true;
             model.IsQuestionAnswered[messageId] = true;
-            string url = $"~/First?teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true";
+            string url = $"~/First?tenantId={tenantId}&teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true";
             return Redirect(url);
         }
 
@@ -113,7 +113,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             QandAModel model = GetModel(tenantId, teamId, channelId, ""); //messageId);
             //model.IsQuestionAnswered[replyId] = true;
             model.IsQuestionAnswered[messageId] = false;
-            string url = $"~/First?teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true";
+            string url = $"~/First?tenantId={tenantId}&teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true";
             return Redirect(url);
         }
 
