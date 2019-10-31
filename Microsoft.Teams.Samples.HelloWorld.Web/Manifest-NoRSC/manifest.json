@@ -2,19 +2,9 @@
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.5/MicrosoftTeams.schema.json",
   "manifestVersion": "devPreview",
 
-  "webApplicationInfo": {
-    "id": "cb38cf54-ac89-4a7a-9ea3-095d3d080037",
-    "resource": "https://AkjRscBasedStoreApp",
-    "applicationPermissions": [
-      "File.Read.Group",
-      "TeamSettings.Read.Group",
-      "ChannelMessage.Read.Group"
-    ]
-  },
-
   "version": "1.0.1",
-  "id": "55cbeb0e-e7be-4ab3-b9bf-ef919406a846",
-  "packageName": "com.contoso.helloworldngrok",
+  "id": "42eaaa11-7350-429f-a6ed-ddba0a0b77cc",
+  "packageName": "com.contoso.helloworld-norsc",
   "developer": {
     "name": "Contoso",
     "websiteUrl": "https://www.microsoft.com",
@@ -26,17 +16,17 @@
     "color": "contoso96x96.png"
   },
   "name": {
-    "short": "Q&A Tracker (ngrok)",
-    "full": "Q&A Tracker (ngrok)"
+    "short": "Q&A Tracker (NoRSC)",
+    "full": "Q&A Tracker (NoRSC)"
   },
   "description": {
-    "short": "Track questions and answers",
-    "full": "This app lets you see the questions that have been asked in a channel, and track which ones have been answered."
+    "short": "(No RSC) Track questions and answers",
+    "full": "(No RSC) This app lets you see the questions that have been asked in a channel, and track which ones have been answered."
   },
   "accentColor": "#60A18E",
   "configurableTabs": [
     {
-      "configurationUrl": "https://8b2c607d.ngrok.io/configure",
+      "configurationUrl": "https://0e9a3a6f.ngrok.io/configure",
       "canUpdateConfiguration": false,
       "scopes": [
         "team"
@@ -47,7 +37,7 @@
     {
       "entityId": "com.contoso.helloworld.hellotab",
       "name": "Hello Tab",
-      "contentUrl": "https://8b2c607d.ngrok.io/hello",
+      "contentUrl": "https://0e9a3a6f.ngrok.io/hello",
       "scopes": [
         "personal"
       ]
@@ -129,7 +119,6 @@
     "messageTeamMembers"
   ],
   "validDomains": [
-    "808e656d.ngrok.io",
-    "nkramerqnaapp.azurewebsites.net"
+    "808e656d.ngrok.io"
   ]
 }

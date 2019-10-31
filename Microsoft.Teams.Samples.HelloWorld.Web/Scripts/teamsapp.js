@@ -65,3 +65,18 @@
       return window.location.protocol + '//' + window.location.host + '/first?tenantId={tid}&teamId={groupId}&channelId={channelId}';
   }
 })();
+
+
+function showLogin() {
+    microsoftTeams.authentication.authenticate({
+        url: window.location.origin + "/Auth", //"/tab-auth/simple-start",
+        width: 600,
+        height: 535,
+        successCallback: function (result) {
+            getUserProfile(result.accessToken);
+        },
+        failureCallback: function (reason) {
+            handleAuthError(reason);
+        }
+    });
+}
