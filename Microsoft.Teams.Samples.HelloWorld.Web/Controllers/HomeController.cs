@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Web.Mvc;
 using FromUriAttribute = System.Web.Http.FromUriAttribute;
 using System.Text.RegularExpressions;
+using System.IO;
 
 namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 {
@@ -63,6 +64,61 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         public ActionResult Auth()
         {
             return View("Auth");
+        }
+
+        [Route("authdone")]
+        [HttpPost]
+        public async Task<ActionResult> AuthDone()
+        {
+            string req_txt;
+            using (StreamReader reader = new StreamReader(HttpContext.Request.InputStream))
+            {
+                req_txt = reader.ReadToEnd();
+            }
+            string token = ParseOauthResponse(req_txt);
+            GraphServiceClient graph = GetAuthenticatedClient(token);
+            var u = await (graph.Me.Request().GetAsync());
+
+            return View("AuthDone");
+        }
+
+        public string ParseOauthResponse(string oathResponse)
+        {
+//access_token =...
+//& token_type = Bearer
+//& expires_in = 3599
+//& id_token =...
+//& state = 75
+//& session_state = 430b10b4 - 262d - 49fe - af9d - e1fae258587b
+
+
+            // Because of the way we have setup the url, idtoken comes in the body in xxx-form format.
+            string access_token = oathResponse.Split('&')[0].Split('=')[1];
+                string state = oathResponse.Split('&')[1].Split('=')[1];
+            //string[] stateParts = Uri.UnescapeDataString(state).Split(new string[] { "__" }, StringSplitOptions.None);
+            //string teamId = stateParts[0];
+            //string channelId = stateParts[1];
+            //string messageId = stateParts[2];
+
+            //var resp =
+            //await HttpHelpers.POST("https://login.microsoftonline.com/common/oauth2/v2.0/token",
+            //    $"client_id={appId}" +
+            //            $"&scope={Uri.EscapeDataString(graphScopes)}" +
+            //            $"&code={authn_token}" +
+            //            $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+            //            $"&grant_type=authorization_code" +
+            //            $"&client_secret={Uri.EscapeDataString(appSecret)}"
+            //            );
+
+            //var bearer = JsonConvert.DeserializeObject<BearerResponse>(resp);
+            //string token = bearer.access_token;
+
+            Response.Cookies.Add(new System.Web.HttpCookie("GraphToken", access_token));
+            return access_token;
+
+            //Response.Cookies.Append("GraphToken", token);
+            //string url = $"~/Home/QandA?teamId={teamId}&channelId={channelId}&messageId={messageId}";
+            //return Redirect(url);
         }
 
         [Route("hello")]
@@ -131,30 +187,30 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
         public async Task RefreshQandA(QandAModel qAndA, GraphServiceClient graph)
         {
-            var msgs = await graph.Teams[qAndA.teamId].Channels[qAndA.channelId]
-                .Messages.Request().Top(30).GetAsync();
             //var msgs = await graph.Teams[qAndA.teamId].Channels[qAndA.channelId]
-            //    .Messages[qAndA.messageId].Replies.Request().Top(50).GetAsync();
+            //    .Messages.Request().Top(30).GetAsync();
+            ////var msgs = await graph.Teams[qAndA.teamId].Channels[qAndA.channelId]
+            ////    .Messages[qAndA.messageId].Replies.Request().Top(50).GetAsync();
 
-            // merge w/ existing questions 
-            var questions =
-                from m in msgs
-                where IsQuestion(m)
-                select new Question()
-                {
-                    MessageId = m.Id,
-                    Text = StripHTML(m.Body.Content),
-                    Votes = m.Reactions.Count()
-                };
-            qAndA.Questions = questions.OrderByDescending(m => m.Votes).ToList();
+            //// merge w/ existing questions 
+            //var questions =
+            //    from m in msgs
+            //    where IsQuestion(m)
+            //    select new Question()
+            //    {
+            //        MessageId = m.Id,
+            //        Text = StripHTML(m.Body.Content),
+            //        Votes = m.Reactions.Count()
+            //    };
+            //qAndA.Questions = questions.OrderByDescending(m => m.Votes).ToList();
 
-            foreach (var q in questions)
-            {
-                if (!qAndA.IsQuestionAnswered.ContainsKey(q.MessageId))
-                    qAndA.IsQuestionAnswered[q.MessageId] = false;
-            }
+            //foreach (var q in questions)
+            //{
+            //    if (!qAndA.IsQuestionAnswered.ContainsKey(q.MessageId))
+            //        qAndA.IsQuestionAnswered[q.MessageId] = false;
+            //}
 
-            //await UpdateCard(qAndA);
+            ////await UpdateCard(qAndA);
         }
 
         public static string StripHTML(string input)

@@ -91,9 +91,9 @@
         let queryParams = {
             client_id: "8a0d6aea-046c-4f30-81a4-e5cc02bce2de", //"c10d02d2-1c49-4b09-9333-566d49ba58cf",
             response_type: "id_token token",
-            response_mode: "fragment",
+            response_mode: "form_post",
             resource: "https://graph.microsoft.com",
-            redirect_uri: window.location.origin + "/tab-auth/simple-end",
+            redirect_uri: window.location.origin + "/authdone",
             nonce: "23",
             state: state,
             // The context object is populated by Teams; the loginHint attribute

@@ -271,6 +271,7 @@
     <Content Include="Views\Home\Configure.cshtml" />
     <None Include="Properties\PublishProfiles\nkramerQnAapp - Web Deploy.pubxml" />
     <Content Include="Views\Home\Auth.cshtml" />
+    <Content Include="Views\Home\AuthDone.cshtml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
