@@ -1,4 +1,4 @@
-﻿@model Microsoft.Teams.Samples.HelloWorld.Web.Controllers.QandAModel
+﻿@model Microsoft.Teams.Samples.HelloWorld.Web.Controllers.QandAModelWrapper
 
 <style>
     .header {
@@ -111,7 +111,8 @@
 
 @{
                 // HACK: Should just be Model, but even accessing that property throws an exception
-                var model = Model; //(BotAuthenticationMSGraph.QandAModel)ViewBag.MyModel;
+                var model = Model.model; //(BotAuthenticationMSGraph.QandAModel)ViewBag.MyModel;
+                bool useRSC = Model.useRSC;
                 if (model != null)
                 {
 
@@ -133,7 +134,7 @@
                                 model.teamId,
                                 model.channelId,
                                 messageId = q.MessageId
-                            }, //model.messageId, replyId = q.MessageId },
+        }, //model.messageId, replyId = q.MessageId },
                             htmlAttributes: null)
                     </div>
                 </div>
@@ -172,7 +173,6 @@
 }
 
 <button onclick="showLogin()">Authenticate me</button>
-
 
 <script>
                                             var x = setInterval(function() {

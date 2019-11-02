@@ -12,7 +12,7 @@
     ]
   },
 
-  "version": "1.0.1",
+  "version": "1.0.2",
   "id": "55cbeb0e-e7be-4ab3-b9bf-ef919406a846",
   "packageName": "com.contoso.helloworldngrok",
   "developer": {
@@ -36,7 +36,7 @@
   "accentColor": "#60A18E",
   "configurableTabs": [
     {
-      "configurationUrl": "https://8b2c607d.ngrok.io/configure",
+      "configurationUrl": "https://58367734.ngrok.io/configure",
       "canUpdateConfiguration": false,
       "scopes": [
         "team"
@@ -47,7 +47,7 @@
     {
       "entityId": "com.contoso.helloworld.hellotab",
       "name": "Hello Tab",
-      "contentUrl": "https://8b2c607d.ngrok.io/hello",
+      "contentUrl": "https://58367734.ngrok.io/hello",
       "scopes": [
         "personal"
       ]

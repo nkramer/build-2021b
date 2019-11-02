@@ -45,6 +45,12 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         //public string Key => Encode(teamId, channelId, messageId);
     }
 
+    public class QandAModelWrapper
+    {
+        public QandAModel model;
+        public bool useRSC = true;
+    }
+
     public class HomeController : Controller
     {
         [Route("")]
@@ -70,25 +76,24 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             [FromUri(Name = "tenantId")] string tenantId,
             [FromUri(Name = "teamId")] string teamId,
             [FromUri(Name = "channelId")] string channelId,
-            [FromUri(Name = "skipRefresh")] Nullable<bool> skipRefresh)
+            [FromUri(Name = "skipRefresh")] Nullable<bool> skipRefresh,
+            [FromUri(Name = "useRSC")] Nullable<bool> useRSC
+            )
         {
+            bool usingRSC = (useRSC != false);
+
             string token = await GetToken(tenantId);
             GraphServiceClient graph = GetAuthenticatedClient(token);
 
             QandAModel model = GetModel(tenantId, teamId, channelId,  "");
             if (skipRefresh != true)
             {
-                await RefreshQandA(model, graph);
+                if (usingRSC)
+                    await RefreshQandA(model, graph);
             }
             ViewBag.MyModel = model;
-            //return View("QandAView", model);
-            return View("First", model);
-
-            //string messages = await new HttpHelpers(token).HttpGetJson($"/teams/{teamId}/channels/{channelId}/messages");
-
-
-            //return View(new TeamAndChannel() { teamId = teamId, channelId = channelId,
-            //message=messages});
+            return View("First", new QandAModelWrapper() { model = model, useRSC = usingRSC });
+            //return View("First", model);
         }
 
         [Route("Home/MarkAsAnswered")]
@@ -103,7 +108,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             QandAModel model = GetModel(tenantId, teamId, channelId, ""); //messageId);
             //model.IsQuestionAnswered[replyId] = true;
             model.IsQuestionAnswered[messageId] = true;
-            string url = $"~/First?tenantId={tenantId}&teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true";
+            string url = $"~/First?tenantId={tenantId}&teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true&useRSC=false";
             return Redirect(url);
         }
 
@@ -119,7 +124,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             QandAModel model = GetModel(tenantId, teamId, channelId, ""); //messageId);
             //model.IsQuestionAnswered[replyId] = true;
             model.IsQuestionAnswered[messageId] = false;
-            string url = $"~/First?tenantId={tenantId}&teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true";
+            string url = $"~/First?tenantId={tenantId}&teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true&useRSC=false";          
             return Redirect(url);
         }
 
