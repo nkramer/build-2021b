@@ -82,6 +82,8 @@ function showLogin() {
             getUserProfile(result.accessToken);
         },
         failureCallback: function (reason) {
+            // Its landing here even on success
+            window.location.reload(true);
             handleAuthError(reason);
         }
     });
