@@ -13,6 +13,7 @@
             }
             return encodedQueryParams.join("&");
         }
+
         // Converts decimal to hex equivalent
         // (From ADAL.js: https://github.com/AzureAD/azure-activedirectory-library-for-js/blob/dev/lib/adal.js)
         function _decimalToHex(number) {
@@ -22,6 +23,7 @@
             }
             return hex;
         }
+
         function _guid() {
             // RFC4122: The version 4 UUID is meant for generating UUIDs from truly-random or
             // pseudo-random numbers.
