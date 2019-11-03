@@ -61,8 +61,13 @@
     var tabChoice = document.getElementById('tabChoice');
     var selectedTab = tabChoice[tabChoice.selectedIndex].value;
 
+      var urlParams = new URLSearchParams(window.location.search);
+      var useRSC = true;
+      if (urlParams.has('useRSC'))
+          useRSC = urlParams.get('useRSC');
       // Teams will substitute the values in {}
-      return window.location.protocol + '//' + window.location.host + '/first?tenantId={tid}&teamId={groupId}&channelId={channelId}';
+      var outputParams = "useRSC=" + useRSC + "&tenantId={tid}&teamId={groupId}&channelId={channelId}";
+      return window.location.protocol + '//' + window.location.host + '/first?' + outputParams;
   }
 })();
 
@@ -73,6 +78,7 @@ function showLogin() {
         width: 600,
         height: 535,
         successCallback: function (result) {
+            window.location.reload(true);
             getUserProfile(result.accessToken);
         },
         failureCallback: function (reason) {

@@ -50,6 +50,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
     {
         public QandAModel model;
         public bool useRSC = true;
+        public bool showLogin = true;
     }
 
     public class HomeController : Controller
@@ -82,19 +83,19 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             return View("AuthDone");
         }
 
+        // Also store the token in a cookie so the client can pass it back to us later
         public string ParseOauthResponse(string oathResponse)
         {
-//access_token =...
-//& token_type = Bearer
-//& expires_in = 3599
-//& id_token =...
-//& state = 75
-//& session_state = 430b10b4 - 262d - 49fe - af9d - e1fae258587b
-
+            //access_token =...
+            //& token_type = Bearer
+            //& expires_in = 3599
+            //& id_token =...
+            //& state = 75
+            //& session_state = 430b10b4 - 262d - 49fe - af9d - e1fae258587b
 
             // Because of the way we have setup the url, idtoken comes in the body in xxx-form format.
             string access_token = oathResponse.Split('&')[0].Split('=')[1];
-                string state = oathResponse.Split('&')[1].Split('=')[1];
+            string state = oathResponse.Split('&')[1].Split('=')[1];
             //string[] stateParts = Uri.UnescapeDataString(state).Split(new string[] { "__" }, StringSplitOptions.None);
             //string teamId = stateParts[0];
             //string channelId = stateParts[1];
@@ -138,19 +139,41 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         {
             bool usingRSC = (useRSC != false);
 
-            string token = await GetToken(tenantId);
-            GraphServiceClient graph = GetAuthenticatedClient(token);
-
-            QandAModel model = GetModel(tenantId, teamId, channelId,  "");
-            if (skipRefresh != true)
+            string token;
+            if (usingRSC)
             {
-                if (usingRSC)
-                    await RefreshQandA(model, graph);
+                token = await GetToken(tenantId);
             }
-            ViewBag.MyModel = model;
-            return View("First", new QandAModelWrapper() { model = model, useRSC = usingRSC });
-            //return View("First", model);
+            else
+            {
+                var cookie = Request.Cookies["GraphToken"];
+                token = cookie == null ? null : cookie.Value;
+                //token = Request.Cookies["GraphToken"].Value;
+            }
+
+            QandAModel model = GetModel(tenantId, teamId, channelId, "");
+            QandAModelWrapper wrapper = new QandAModelWrapper() { model = model, useRSC = usingRSC, showLogin = (token == null) };
+
+            try
+            {
+                GraphServiceClient graph = GetAuthenticatedClient(token);
+
+                if (skipRefresh != true && !wrapper.showLogin)
+                {
+                    await RefreshQandA(model, graph);
+                }
+                ViewBag.MyModel = model;
+                return View("First", wrapper);
+                //return View("First", model);
+            } catch (Exception e) when (e.Message.Contains("Unauthorized") || e.Message.Contains("Access token has expired."))
+            {
+                // token expired
+                Response.Cookies.Remove("GraphToken");
+                wrapper.showLogin = true;
+                return View("First", wrapper);
+            }
         }
+ 
 
         [Route("Home/MarkAsAnswered")]
         public ActionResult MarkAsAnswered(
@@ -187,30 +210,30 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
         public async Task RefreshQandA(QandAModel qAndA, GraphServiceClient graph)
         {
+            var msgs = await graph.Teams[qAndA.teamId].Channels[qAndA.channelId]
+                .Messages.Request().Top(30).GetAsync();
             //var msgs = await graph.Teams[qAndA.teamId].Channels[qAndA.channelId]
-            //    .Messages.Request().Top(30).GetAsync();
-            ////var msgs = await graph.Teams[qAndA.teamId].Channels[qAndA.channelId]
-            ////    .Messages[qAndA.messageId].Replies.Request().Top(50).GetAsync();
+            //    .Messages[qAndA.messageId].Replies.Request().Top(50).GetAsync();
 
-            //// merge w/ existing questions 
-            //var questions =
-            //    from m in msgs
-            //    where IsQuestion(m)
-            //    select new Question()
-            //    {
-            //        MessageId = m.Id,
-            //        Text = StripHTML(m.Body.Content),
-            //        Votes = m.Reactions.Count()
-            //    };
-            //qAndA.Questions = questions.OrderByDescending(m => m.Votes).ToList();
+            // merge w/ existing questions 
+            var questions =
+                from m in msgs
+                where IsQuestion(m)
+                select new Question()
+                {
+                    MessageId = m.Id,
+                    Text = StripHTML(m.Body.Content),
+                    Votes = m.Reactions.Count()
+                };
+            qAndA.Questions = questions.OrderByDescending(m => m.Votes).ToList();
 
-            //foreach (var q in questions)
-            //{
-            //    if (!qAndA.IsQuestionAnswered.ContainsKey(q.MessageId))
-            //        qAndA.IsQuestionAnswered[q.MessageId] = false;
-            //}
+            foreach (var q in questions)
+            {
+                if (!qAndA.IsQuestionAnswered.ContainsKey(q.MessageId))
+                    qAndA.IsQuestionAnswered[q.MessageId] = false;
+            }
 
-            ////await UpdateCard(qAndA);
+            //await UpdateCard(qAndA);
         }
 
         public static string StripHTML(string input)
