@@ -239,6 +239,10 @@
     <Content Include="Content\Site.css" />
     <Content Include="Manifest-Azure\contoso20x20.png" />
     <Content Include="Manifest-Azure\contoso96x96.png" />
+    <Content Include="Manifest-NoRSC-Azure\contoso20x20.png" />
+    <Content Include="Manifest-NoRSC-Azure\contoso96x96.png" />
+    <Content Include="Manifest-NoRSC\contoso20x20.png" />
+    <Content Include="Manifest-NoRSC\contoso96x96.png" />
     <Content Include="Manifest\contoso20x20.png" />
     <Content Include="Manifest\contoso96x96.png" />
     <Content Include="Scripts\teamsapp.js" />
@@ -260,6 +264,8 @@
   <ItemGroup>
     <Content Include="Manifest\manifest.json" />
     <Content Include="Manifest-Azure\manifest.json" />
+    <Content Include="Manifest-NoRSC\manifest.json" />
+    <Content Include="Manifest-NoRSC-Azure\manifest.json" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
@@ -267,6 +273,8 @@
     <Content Include="Views\Home\Second.cshtml" />
     <Content Include="Views\Home\Configure.cshtml" />
     <None Include="Properties\PublishProfiles\nkramerQnAapp - Web Deploy.pubxml" />
+    <Content Include="Views\Home\Auth.cshtml" />
+    <Content Include="Views\Home\AuthDone.cshtml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -308,7 +316,10 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent>powershell.exe Compress-Archive -Path \"$(ProjectDir)Manifest\*\" -DestinationPath \"$(TargetDir)helloworldapp.zip\" -Force
-powershell.exe Compress-Archive -Path \"$(ProjectDir)Manifest-Azure\*\" -DestinationPath \"$(TargetDir)helloworldapp-azure.zip\" -Force</PostBuildEvent>
+powershell.exe Compress-Archive -Path \"$(ProjectDir)Manifest-Azure\*\" -DestinationPath \"$(TargetDir)helloworldapp-azure.zip\" -Force
+powershell.exe Compress-Archive -Path \"$(ProjectDir)Manifest-NoRSC\*\" -DestinationPath \"$(TargetDir)helloworldapp-NoRSC.zip\" -Force
+powershell.exe Compress-Archive -Path \"$(ProjectDir)Manifest-NoRSC-Azure\*\" -DestinationPath \"$(TargetDir)helloworldapp-NoRSC-Azure.zip\" -Force
+</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Web.Mvc;
 using FromUriAttribute = System.Web.Http.FromUriAttribute;
 using System.Text.RegularExpressions;
+using System.IO;
 
 namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 {
@@ -45,12 +46,80 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         //public string Key => Encode(teamId, channelId, messageId);
     }
 
+    public class QandAModelWrapper
+    {
+        public QandAModel model;
+        public bool useRSC = true;
+        public bool showLogin = true;
+    }
+
     public class HomeController : Controller
     {
         [Route("")]
         public ActionResult Index()
         {
             return View();
+        }
+
+        [Route("Auth")]
+        public ActionResult Auth()
+        {
+            return View("Auth");
+        }
+
+        [Route("authdone")]
+        [HttpPost]
+        public async Task<ActionResult> AuthDone()
+        {
+            string req_txt;
+            using (StreamReader reader = new StreamReader(HttpContext.Request.InputStream))
+            {
+                req_txt = reader.ReadToEnd();
+            }
+            string token = ParseOauthResponse(req_txt);
+            GraphServiceClient graph = GetAuthenticatedClient(token);
+            var u = await (graph.Me.Request().GetAsync());
+
+            return View("AuthDone");
+        }
+
+        // Also store the token in a cookie so the client can pass it back to us later
+        public string ParseOauthResponse(string oathResponse)
+        {
+            //access_token =...
+            //& token_type = Bearer
+            //& expires_in = 3599
+            //& id_token =...
+            //& state = 75
+            //& session_state = 430b10b4 - 262d - 49fe - af9d - e1fae258587b
+
+            // Because of the way we have setup the url, idtoken comes in the body in xxx-form format.
+            string access_token = oathResponse.Split('&')[0].Split('=')[1];
+            string state = oathResponse.Split('&')[1].Split('=')[1];
+            //string[] stateParts = Uri.UnescapeDataString(state).Split(new string[] { "__" }, StringSplitOptions.None);
+            //string teamId = stateParts[0];
+            //string channelId = stateParts[1];
+            //string messageId = stateParts[2];
+
+            //var resp =
+            //await HttpHelpers.POST("https://login.microsoftonline.com/common/oauth2/v2.0/token",
+            //    $"client_id={appId}" +
+            //            $"&scope={Uri.EscapeDataString(graphScopes)}" +
+            //            $"&code={authn_token}" +
+            //            $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+            //            $"&grant_type=authorization_code" +
+            //            $"&client_secret={Uri.EscapeDataString(appSecret)}"
+            //            );
+
+            //var bearer = JsonConvert.DeserializeObject<BearerResponse>(resp);
+            //string token = bearer.access_token;
+
+            Response.Cookies.Add(new System.Web.HttpCookie("GraphToken", access_token));
+            return access_token;
+
+            //Response.Cookies.Append("GraphToken", token);
+            //string url = $"~/Home/QandA?teamId={teamId}&channelId={channelId}&messageId={messageId}";
+            //return Redirect(url);
         }
 
         [Route("hello")]
@@ -64,26 +133,47 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             [FromUri(Name = "tenantId")] string tenantId,
             [FromUri(Name = "teamId")] string teamId,
             [FromUri(Name = "channelId")] string channelId,
-            [FromUri(Name = "skipRefresh")] Nullable<bool> skipRefresh)
+            [FromUri(Name = "skipRefresh")] Nullable<bool> skipRefresh,
+            [FromUri(Name = "useRSC")] Nullable<bool> useRSC
+            )
         {
-            string token = await GetToken(tenantId);
-            GraphServiceClient graph = GetAuthenticatedClient(token);
+            bool usingRSC = (useRSC != false);
 
-            QandAModel model = GetModel(tenantId, teamId, channelId,  "");
-            if (skipRefresh != true)
+            string token;
+            if (usingRSC)
             {
-                await RefreshQandA(model, graph);
+                token = await GetToken(tenantId);
             }
-            ViewBag.MyModel = model;
-            //return View("QandAView", model);
-            return View("First", model);
+            else
+            {
+                var cookie = Request.Cookies["GraphToken"];
+                token = cookie == null ? null : cookie.Value;
+                //token = Request.Cookies["GraphToken"].Value;
+            }
 
-            //string messages = await new HttpHelpers(token).HttpGetJson($"/teams/{teamId}/channels/{channelId}/messages");
+            QandAModel model = GetModel(tenantId, teamId, channelId, "");
+            QandAModelWrapper wrapper = new QandAModelWrapper() { model = model, useRSC = usingRSC, showLogin = (token == null) };
 
+            try
+            {
+                GraphServiceClient graph = GetAuthenticatedClient(token);
 
-            //return View(new TeamAndChannel() { teamId = teamId, channelId = channelId,
-            //message=messages});
+                if (skipRefresh != true && !wrapper.showLogin)
+                {
+                    await RefreshQandA(model, graph);
+                }
+                ViewBag.MyModel = model;
+                return View("First", wrapper);
+                //return View("First", model);
+            } catch (Exception e) when (e.Message.Contains("Unauthorized") || e.Message.Contains("Access token has expired."))
+            {
+                // token expired
+                Response.Cookies.Remove("GraphToken");
+                wrapper.showLogin = true;
+                return View("First", wrapper);
+            }
         }
+ 
 
         [Route("Home/MarkAsAnswered")]
         public ActionResult MarkAsAnswered(
@@ -97,7 +187,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             QandAModel model = GetModel(tenantId, teamId, channelId, ""); //messageId);
             //model.IsQuestionAnswered[replyId] = true;
             model.IsQuestionAnswered[messageId] = true;
-            string url = $"~/First?tenantId={tenantId}&teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true";
+            string url = $"~/First?tenantId={tenantId}&teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true&useRSC=false";
             return Redirect(url);
         }
 
@@ -113,7 +203,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             QandAModel model = GetModel(tenantId, teamId, channelId, ""); //messageId);
             //model.IsQuestionAnswered[replyId] = true;
             model.IsQuestionAnswered[messageId] = false;
-            string url = $"~/First?tenantId={tenantId}&teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true";
+            string url = $"~/First?tenantId={tenantId}&teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true&useRSC=false";          
             return Redirect(url);
         }
 

@@ -1,4 +1,4 @@
-﻿@model Microsoft.Teams.Samples.HelloWorld.Web.Controllers.QandAModel
+﻿@model Microsoft.Teams.Samples.HelloWorld.Web.Controllers.QandAModelWrapper
 
 <style>
     .header {
@@ -110,10 +110,15 @@
 </div>
 
 @{
-                // HACK: Should just be Model, but even accessing that property throws an exception
-                var model = Model; //(BotAuthenticationMSGraph.QandAModel)ViewBag.MyModel;
-                if (model != null)
-                {
+    // HACK: Should just be Model, but even accessing that property throws an exception
+    var model = Model.model; //(BotAuthenticationMSGraph.QandAModel)ViewBag.MyModel;
+    bool useRSC = Model.useRSC;
+    if (Model.showLogin)
+    {
+        <button onclick="showLogin()">Authenticate me</button>
+    }
+    else if (model != null)
+    {
 
         <h2 class="header">Open questions</h2>
         foreach (var q in model.Questions.Where(q => !model.IsQuestionAnswered[q.MessageId]))
@@ -133,7 +138,7 @@
                                 model.teamId,
                                 model.channelId,
                                 messageId = q.MessageId
-                            }, //model.messageId, replyId = q.MessageId },
+        }, //model.messageId, replyId = q.MessageId },
                             htmlAttributes: null)
                     </div>
                 </div>
@@ -170,6 +175,7 @@
         @Html.ActionLink("Click here to sign in", "SignIn", "Account", new { area = "" }, new { @class = "btn btn-primary btn-large" })
     }
 }
+
 
 <script>
                                             var x = setInterval(function() {
