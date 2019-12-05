@@ -13,7 +13,20 @@ extensions:
   createdDate: 10/16/2017 10:02:21 PM
 ---
 
-# Demo script
+# Readme
+
+This is a quick and dirty demonstration of resource specific consent (RSC).
+The implementation is very inefficient – effectively neither tokens or messages are cached, and any UI update requires refreshing the page.
+
+Key files:
+
+- Microsoft.Teams.Samples.HelloWorld.Web\Controllers\HomeController.cs has the majority of the app logic.
+- Microsoft.Teams.Samples.HelloWorld.Web\Views\Home\First.cshtml has the main UI
+- Microsoft.Teams.Samples.HelloWorld.Web\Manifest\manifest.json shows how to do the manifest for RSC
+- Microsoft.Teams.Samples.HelloWorld.Web\Views\Home\Auth.cshtml and  Microsoft.Teams.Samples.HelloWorld.Web\Views\Home\AuthDone.cshtml and Microsoft.Teams.Samples.HelloWorld.Web\Scripts\teamsapp.js get the user delegated token for the tab.
+- AAD-appregistrations has info on how to set up your AAD app registrations. This sample is currently set up with the bot using the same app registration as the RSC graph app, I'm not sure I would do that again – bot framework registrations are set up to use AAD v2 tokens, and that creates a problem where AAD won't show a consent prompt when it's needed unless you explicitly pass in prompt=consent.
+
+## Demo script
 
 git clone https://github.com/nkramer/graphbot.git -b signalr
 (note branch)
@@ -66,5 +79,3 @@ Demo steps:
 - Mark one or two questions as answered so the app looks more real
 - go to your other window, and type in a new question. (Must be a root message, must contain a question mark)
 - Wait ~5 seconds for it to show up in Q&A Tracker. (Most of this is webhook – despite Q&A Tracker rerunning from scratch everything on both client and server with every new message, the webhook is the slow part.)
-
-Please don't share the source code yet – it has security issues, is very messy, very inefficient, and doesn't represent best practices for tab auth and webhook set up.
