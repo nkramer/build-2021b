@@ -24,7 +24,7 @@ Key files:
 - Microsoft.Teams.Samples.HelloWorld.Web\Views\Home\First.cshtml has the main UI
 - Microsoft.Teams.Samples.HelloWorld.Web\Manifest\manifest.json shows how to do the manifest for RSC
 - Microsoft.Teams.Samples.HelloWorld.Web\Views\Home\Auth.cshtml and  Microsoft.Teams.Samples.HelloWorld.Web\Views\Home\AuthDone.cshtml and Microsoft.Teams.Samples.HelloWorld.Web\Scripts\teamsapp.js get the user delegated token for the tab.
-- AAD-appregistrations has info on how to set up your AAD app registrations. This sample is currently set up with the bot using the same app registration as the RSC graph app, I'm not sure I would do that again – bot framework registrations are set up to use AAD v2 tokens, and that creates a problem where AAD won't show a consent prompt when it's needed unless you explicitly pass in prompt=consent.
+- AAD-appregistrations has info on how to set up your AAD app registrations. This sample is currently set up with the bot using the same app registration as the RSC graph app, I'm not sure I would do that again – bot framework registrations are set up to use AAD v2 tokens, and that creates a problem where AAD won't show a consent prompt when it's needed unless you explicitly pass in prompt=consent. Currently I'm granting consent for the user token in the admin portal, which is not how you'd want to ship a real multitenant app.
 
 ## Demo script
 
