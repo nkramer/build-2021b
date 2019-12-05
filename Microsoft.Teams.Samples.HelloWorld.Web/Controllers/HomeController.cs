@@ -58,121 +58,6 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
     internal static class Authorization
     {
-
-        // Also store the token in a cookie so the client can pass it back to us later
-        public static string ParseOauthResponse(string oathResponse)
-        {
-            //access_token =...
-            //& token_type = Bearer
-            //& expires_in = 3599
-            //& id_token =...
-            //& state = 75
-            //& session_state = 430b10b4 - 262d - 49fe - af9d - e1fae258587b
-
-            // Because of the way we have setup the url, idtoken comes in the body in xxx-form format.
-            Debug.Assert(oathResponse.Split('&')[0].Split('=')[0] == "access_token");
-            string access_token = oathResponse.Split('&')[0].Split('=')[1];
-
-            string state = oathResponse.Split('&')[1].Split('=')[1];
-            //string[] stateParts = Uri.UnescapeDataString(state).Split(new string[] { "__" }, StringSplitOptions.None);
-            //string teamId = stateParts[0];
-            //string channelId = stateParts[1];
-            //string messageId = stateParts[2];
-
-            //var resp =
-            //await HttpHelpers.POST("https://login.microsoftonline.com/common/oauth2/v2.0/token",
-            //    $"client_id={appId}" +
-            //            $"&scope={Uri.EscapeDataString(graphScopes)}" +
-            //            $"&code={authn_token}" +
-            //            $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
-            //            $"&grant_type=authorization_code" +
-            //            $"&client_secret={Uri.EscapeDataString(appSecret)}"
-            //            );
-
-            //var bearer = JsonConvert.DeserializeObject<BearerResponse>(resp);
-            //string token = bearer.access_token;
-
-            return access_token;
-
-            //Response.Cookies.Append("GraphToken", token);
-            //string url = $"~/Home/QandA?teamId={teamId}&channelId={channelId}&messageId={messageId}";
-            //return Redirect(url);
-        }
-
-        private static string GetTokenFromCookie(HttpCookieCollection cookies)
-        {
-            var cookie = cookies["GraphToken"];
-
-            if (cookie == null)
-                return null;
-            else
-                return cookie.Value;
-        }
-
-        private static string UserFromToken(string token)
-        {
-            var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
-
-            string oid = null;
-            string tid = null;
-            foreach (var claim in jwt.Claims)
-            {
-                if (claim.Type == "oid")
-                    oid = claim.Value;
-                if (claim.Type == "tid")
-                    tid = claim.Value;
-            }
-
-            return oid;
-        }
-
-
-        private static string GetTenant(string token)
-        {
-            return GetTokenClaim(token, "tid");
-        }
-
-        private static string GetTokenClaim(string token, string claimType)
-        {
-            var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
-            foreach (var claim in jwt.Claims)
-            {
-                if (claim.Type == claimType)
-                    return claim.Value;
-            }
-
-            return null;
-        }
-
-        private static GraphServiceClient GetGraphClientUnsafe(string token)
-        {
-            var graphClient = new GraphServiceClient(
-                new DelegateAuthenticationProvider(
-                    requestMessage =>
-                    {
-                        // Append the access token to the request.
-                        requestMessage.Headers.Authorization = new AuthenticationHeaderValue("bearer", token);
-
-                        // Get event times in the current time zone.
-                        requestMessage.Headers.Add("Prefer", "outlook.timezone=\"" + TimeZoneInfo.Local.Id + "\"");
-
-                        return Task.CompletedTask;
-                    }));
-            return graphClient;
-        }
-
-        private static void FailAuth(HttpCookieCollection requestCookies, HttpCookieCollection responseCookies)
-        {
-            if (responseCookies["GraphToken"] != null)
-            {
-                // Remove invalid cookie by expiring it
-                responseCookies["GraphToken"].Expires = DateTime.Now.AddDays(-1);
-                responseCookies["GraphToken"].Value = "invalid";
-            }
-
-            throw new Exception("Unauthorized user!");
-        }
-
         // As part of creating the Graph Client, this method acquires all the necessary 
         // tokens, and checks that the user has access to the team.
         public static async Task<GraphServiceClient> GetGraphClient(string teamId, HttpCookieCollection requestCookies, HttpCookieCollection responseCookies, Nullable<bool> useRSC)
@@ -232,6 +117,45 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             return GetGraphClientUnsafe(messagingToken);
         }
 
+        private static string GetTokenFromCookie(HttpCookieCollection cookies)
+        {
+            var cookie = cookies["GraphToken"];
+
+            if (cookie == null)
+                return null;
+            else
+                return cookie.Value;
+        }
+
+        private static void FailAuth(HttpCookieCollection requestCookies, HttpCookieCollection responseCookies)
+        {
+            if (responseCookies["GraphToken"] != null)
+            {
+                // Remove invalid cookie by expiring it
+                responseCookies["GraphToken"].Expires = DateTime.Now.AddDays(-1);
+                responseCookies["GraphToken"].Value = "invalid";
+            }
+
+            throw new Exception("Unauthorized user!");
+        }
+
+        private static string GetTokenClaim(string token, string claimType)
+        {
+            var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
+            foreach (var claim in jwt.Claims)
+            {
+                if (claim.Type == claimType)
+                    return claim.Value;
+            }
+
+            return null;
+        }
+
+        private static string GetTenant(string token)
+        {
+            return GetTokenClaim(token, "tid");
+        }
+
         private static async Task<string> GetAppPermissionToken(string tenant, Nullable<bool> useRSC)
         {
             string appId = GetGraphAppId(useRSC);
@@ -242,6 +166,23 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                     + "&scope=https%3A%2F%2Fgraph.microsoft.com%2F.default");
             string token = response.Deserialize<TokenResponse>().access_token;
             return token;
+        }
+
+        private static GraphServiceClient GetGraphClientUnsafe(string token)
+        {
+            var graphClient = new GraphServiceClient(
+                new DelegateAuthenticationProvider(
+                    requestMessage =>
+                    {
+                        // Append the access token to the request.
+                        requestMessage.Headers.Authorization = new AuthenticationHeaderValue("bearer", token);
+
+                        // Get event times in the current time zone.
+                        requestMessage.Headers.Add("Prefer", "outlook.timezone=\"" + TimeZoneInfo.Local.Id + "\"");
+
+                        return Task.CompletedTask;
+                    }));
+            return graphClient;
         }
 
         public static void ProcessAadCallbackAndStoreUserToken(HttpContextBase httpContext, HttpCookieCollection cookies)
@@ -261,6 +202,46 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             // Never put an application permissions token in a cookie, though.
         }
 
+        // Also store the token in a cookie so the client can pass it back to us later
+        private static string ParseOauthResponse(string oathResponse)
+        {
+            //access_token =...
+            //& token_type = Bearer
+            //& expires_in = 3599
+            //& id_token =...
+            //& state = 75
+            //& session_state = 430b10b4 - 262d - 49fe - af9d - e1fae258587b
+
+            // Because of the way we have setup the url, idtoken comes in the body in xxx-form format.
+            Debug.Assert(oathResponse.Split('&')[0].Split('=')[0] == "access_token");
+            string access_token = oathResponse.Split('&')[0].Split('=')[1];
+
+            string state = oathResponse.Split('&')[1].Split('=')[1];
+            //string[] stateParts = Uri.UnescapeDataString(state).Split(new string[] { "__" }, StringSplitOptions.None);
+            //string teamId = stateParts[0];
+            //string channelId = stateParts[1];
+            //string messageId = stateParts[2];
+
+            //var resp =
+            //await HttpHelpers.POST("https://login.microsoftonline.com/common/oauth2/v2.0/token",
+            //    $"client_id={appId}" +
+            //            $"&scope={Uri.EscapeDataString(graphScopes)}" +
+            //            $"&code={authn_token}" +
+            //            $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+            //            $"&grant_type=authorization_code" +
+            //            $"&client_secret={Uri.EscapeDataString(appSecret)}"
+            //            );
+
+            //var bearer = JsonConvert.DeserializeObject<BearerResponse>(resp);
+            //string token = bearer.access_token;
+
+            return access_token;
+
+            //Response.Cookies.Append("GraphToken", token);
+            //string url = $"~/Home/QandA?teamId={teamId}&channelId={channelId}&messageId={messageId}";
+            //return Redirect(url);
+        }
+
         // Returns the appid for user delegated use
         public static string GetGraphAppId(Nullable<bool> useRSC)
         {
@@ -272,7 +253,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         }
 
         // Returns the appid for user delegated use
-        public static string GetGraphAppPassword(Nullable<bool> useRSC)
+        private static string GetGraphAppPassword(Nullable<bool> useRSC)
         {
             bool usingRSC = (useRSC != false);
             if (usingRSC)
@@ -289,70 +270,6 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
     public class HomeController : Controller
     {
-        [Route("")]
-        public ActionResult Index()
-        {
-            return View();
-        }
-
-        [Route("subscription")]
-        [HttpPost]
-        public ActionResult Subscription()
-        {
-            var encodedString = this.Request.QueryString["validationToken"];
-            if (encodedString != null)
-            {
-                // Ack the webhook subscription
-                var decodedString = HttpUtility.UrlDecode(encodedString);
-                var res = new ContentResult() { Content = decodedString, ContentType = "text/plain", ContentEncoding = System.Text.Encoding.UTF8 };
-                return res;
-            } else
-            {
-                // signal clients
-                Broadcaster.Broadcast();
-                return new ContentResult() { Content = "", ContentType = "text/plain", ContentEncoding = System.Text.Encoding.UTF8 };
-            }
-        }
-
-        [Route("AuthRSC")]
-        public ActionResult AuthRSC()
-        {
-            bool useRSC = true;
-            var model = new AuthModel() { GraphAppId = Authorization.GetGraphAppId(useRSC) };
-            return View("Auth", model);
-        }
-
-        [Route("AuthNoRSC")]
-        public ActionResult AuthNoRSC()
-        {
-            bool useRSC = false;
-            var model = new AuthModel() { GraphAppId = Authorization.GetGraphAppId(useRSC) };
-            return View("Auth", model);
-        }
-
-        //public ActionResult Auth([FromUri(Name = "useRSC")] Nullable<bool> useRSC)
-        //{
-        //    var model = new AuthModel() { GraphAppId = Authorization.GetGraphAppId(useRSC) };
-        //    return View("Auth", model);
-        //}
-
-        [Route("authdone")]
-        [HttpPost]
-        public async Task<ActionResult> AuthDone()
-        {
-            Authorization.ProcessAadCallbackAndStoreUserToken(this.HttpContext, this.Response.Cookies);
-            return View("AuthDone");
-        }
-
-        [Route("hello")]
-        public ActionResult Hello()
-        {
-            return View("Index");
-        }
-
-        private static Dictionary<string, string> channelToSubscription
-            = new Dictionary<string, string>();
-
         [Route("first")]
         public async Task<ActionResult> First(
             [FromUri(Name = "tenantId")] string tenantId,
@@ -399,6 +316,48 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             }
         }
 
+        // Start user auth flow -- get name & consent
+        [Route("AuthRSC")]
+        public ActionResult AuthRSC()
+        {
+            bool useRSC = true;
+            var model = new AuthModel() { GraphAppId = Authorization.GetGraphAppId(useRSC) };
+            return View("Auth", model);
+        }
+
+        // Start user auth flow -- get name & consent
+        [Route("AuthNoRSC")]
+        public ActionResult AuthNoRSC()
+        {
+            bool useRSC = false;
+            var model = new AuthModel() { GraphAppId = Authorization.GetGraphAppId(useRSC) };
+            return View("Auth", model);
+        }
+
+        // AAD callback
+        [Route("authdone")]
+        [HttpPost]
+        public async Task<ActionResult> AuthDone()
+        {
+            Authorization.ProcessAadCallbackAndStoreUserToken(this.HttpContext, this.Response.Cookies);
+            return View("AuthDone");
+        }
+
+        [Route("")]
+        public ActionResult Index()
+        {
+            return View();
+        }
+
+        [Route("hello")]
+        public ActionResult Hello()
+        {
+            return View("Index");
+        }
+
+        private static Dictionary<string, string> channelToSubscription
+            = new Dictionary<string, string>();
+
         private static async Task CreateSubscription(string channelId, QandAModel model, GraphServiceClient graph)
         {
             var subscription = new Subscription
@@ -435,6 +394,27 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             catch (Exception)
             {
                 // Bail on subscriptions without killing the whole demo
+            }
+        }
+
+        // Callback
+        [Route("subscription")]
+        [HttpPost]
+        public ActionResult Subscription()
+        {
+            var encodedString = this.Request.QueryString["validationToken"];
+            if (encodedString != null)
+            {
+                // Ack the webhook subscription
+                var decodedString = HttpUtility.UrlDecode(encodedString);
+                var res = new ContentResult() { Content = decodedString, ContentType = "text/plain", ContentEncoding = System.Text.Encoding.UTF8 };
+                return res;
+            }
+            else
+            {
+                // signal clients
+                Broadcaster.Broadcast();
+                return new ContentResult() { Content = "", ContentType = "text/plain", ContentEncoding = System.Text.Encoding.UTF8 };
             }
         }
 
