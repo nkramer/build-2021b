@@ -337,7 +337,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         // AAD callback
         [Route("authdone")]
         [HttpPost]
-        public async Task<ActionResult> AuthDone()
+        public ActionResult AuthDone()
         {
             Authorization.ProcessAadCallbackAndStoreUserToken(this.HttpContext, this.Response.Cookies);
             return View("AuthDone");
