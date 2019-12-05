@@ -6,12 +6,14 @@
     "id": "cb38cf54-ac89-4a7a-9ea3-095d3d080037",
     "resource": "https://AkjRscBasedStoreApp",
     "applicationPermissions": [
+      "File.Read.Group",
       "TeamSettings.Read.Group",
-      "ChannelMessage.Read.Group"
+      "ChannelMessage.Read.Group",
+      "Member.Read.Group"
     ]
   },
 
-  "version": "1.0.4",
+  "version": "1.0.6",
   "id": "55cbeb0e-e7be-4ab3-b9bf-ef919406a849",
   "packageName": "com.contoso.helloworld-azure",
   "developer": {
