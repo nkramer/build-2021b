@@ -286,3 +286,4 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+/Microsoft.Teams.Samples.HelloWorld.Web/Web.config.secrets

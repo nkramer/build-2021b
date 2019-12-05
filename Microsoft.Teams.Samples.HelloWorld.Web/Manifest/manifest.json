@@ -8,11 +8,12 @@
     "applicationPermissions": [
       "File.Read.Group",
       "TeamSettings.Read.Group",
-      "ChannelMessage.Read.Group"
+      "ChannelMessage.Read.Group",
+      "Member.Read.Group"
     ]
   },
 
-  "version": "1.0.8",
+  "version": "1.0.9",
   "id": "55cbeb0e-e7be-4ab3-b9bf-ef919406a846",
   "packageName": "com.contoso.helloworldngrok",
   "developer": {

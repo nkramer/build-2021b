@@ -11,6 +11,8 @@ using FromUriAttribute = System.Web.Http.FromUriAttribute;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Web;
+using System.Net;
+using System.Diagnostics;
 
 namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 {
@@ -54,6 +56,237 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         public bool showLogin = true;
     }
 
+    internal static class Authorization
+    {
+
+        // Also store the token in a cookie so the client can pass it back to us later
+        public static string ParseOauthResponse(string oathResponse)
+        {
+            //access_token =...
+            //& token_type = Bearer
+            //& expires_in = 3599
+            //& id_token =...
+            //& state = 75
+            //& session_state = 430b10b4 - 262d - 49fe - af9d - e1fae258587b
+
+            // Because of the way we have setup the url, idtoken comes in the body in xxx-form format.
+            Debug.Assert(oathResponse.Split('&')[0].Split('=')[0] == "access_token");
+            string access_token = oathResponse.Split('&')[0].Split('=')[1];
+
+            string state = oathResponse.Split('&')[1].Split('=')[1];
+            //string[] stateParts = Uri.UnescapeDataString(state).Split(new string[] { "__" }, StringSplitOptions.None);
+            //string teamId = stateParts[0];
+            //string channelId = stateParts[1];
+            //string messageId = stateParts[2];
+
+            //var resp =
+            //await HttpHelpers.POST("https://login.microsoftonline.com/common/oauth2/v2.0/token",
+            //    $"client_id={appId}" +
+            //            $"&scope={Uri.EscapeDataString(graphScopes)}" +
+            //            $"&code={authn_token}" +
+            //            $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+            //            $"&grant_type=authorization_code" +
+            //            $"&client_secret={Uri.EscapeDataString(appSecret)}"
+            //            );
+
+            //var bearer = JsonConvert.DeserializeObject<BearerResponse>(resp);
+            //string token = bearer.access_token;
+
+            return access_token;
+
+            //Response.Cookies.Append("GraphToken", token);
+            //string url = $"~/Home/QandA?teamId={teamId}&channelId={channelId}&messageId={messageId}";
+            //return Redirect(url);
+        }
+
+        private static string GetTokenFromCookie(HttpCookieCollection cookies)
+        {
+            var cookie = cookies["GraphToken"];
+
+            if (cookie == null)
+                return null;
+            else
+                return cookie.Value;
+        }
+
+        private static string UserFromToken(string token)
+        {
+            var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
+
+            string oid = null;
+            string tid = null;
+            foreach (var claim in jwt.Claims)
+            {
+                if (claim.Type == "oid")
+                    oid = claim.Value;
+                if (claim.Type == "tid")
+                    tid = claim.Value;
+            }
+
+            return oid;
+        }
+
+
+        private static string GetTenant(string token)
+        {
+            return GetTokenClaim(token, "tid");
+        }
+
+        private static string GetTokenClaim(string token, string claimType)
+        {
+            var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
+            foreach (var claim in jwt.Claims)
+            {
+                if (claim.Type == claimType)
+                    return claim.Value;
+            }
+
+            return null;
+        }
+
+        private static GraphServiceClient GetGraphClientUnsafe(string token)
+        {
+            var graphClient = new GraphServiceClient(
+                new DelegateAuthenticationProvider(
+                    requestMessage =>
+                    {
+                        // Append the access token to the request.
+                        requestMessage.Headers.Authorization = new AuthenticationHeaderValue("bearer", token);
+
+                        // Get event times in the current time zone.
+                        requestMessage.Headers.Add("Prefer", "outlook.timezone=\"" + TimeZoneInfo.Local.Id + "\"");
+
+                        return Task.CompletedTask;
+                    }));
+            return graphClient;
+        }
+
+        private static void FailAuth(HttpCookieCollection requestCookies, HttpCookieCollection responseCookies)
+        {
+            if (responseCookies["GraphToken"] != null)
+            {
+                // Remove invalid cookie by expiring it
+                responseCookies["GraphToken"].Expires = DateTime.Now.AddDays(-1);
+                responseCookies["GraphToken"].Value = "invalid";
+            }
+
+            throw new Exception("Unauthorized user!");
+        }
+
+        // As part of creating the Graph Client, this method acquires all the necessary 
+        // tokens, and checks that the user has access to the team.
+        public static async Task<GraphServiceClient> GetGraphClient(string teamId, HttpCookieCollection requestCookies, HttpCookieCollection responseCookies, Nullable<bool> useRSC)
+        {
+            // There's potentially two tokens – the user delegated token, which provide the user's identity, 
+            // and the main token which allows the app to make useful API calls. When not using RSC, it's 
+            // all the same token. But when using RSC, the second token is an RSC/application permissions token.
+            // I recommend using the same appid for both tokens, but you don't have to.
+            bool usingRSC = (useRSC != false);
+
+            string userToken = GetTokenFromCookie(requestCookies);
+
+            if (userToken == null)
+                FailAuth(requestCookies, responseCookies);
+
+            // For debugging sanity, make sure the cookie is from the app ID you are actually 
+            // expecting, and not a leftover of a previous version of your app.
+            if (GetTokenClaim(userToken, "appid") != GetGraphAppId(useRSC))
+                FailAuth(requestCookies, responseCookies);
+
+            // Figure out the user and tenant from the userToken. The information is all in the token, 
+            // but the easiest way to verify the token is properly signed is to use it to make a Graph call.
+            GraphServiceClient userGraph = GetGraphClientUnsafe(userToken);
+            User me = null;
+            try
+            {
+                me = await userGraph.Me.Request().GetAsync();
+            }
+            catch
+            {
+                // eg InvalidAuthenticationToken
+                FailAuth(requestCookies, responseCookies);
+            }
+            string tenantId = GetTenant(userToken);
+
+            string messagingToken =
+                usingRSC
+                ? await GetAppPermissionToken(tenantId, useRSC)
+                : userToken;
+
+            GraphServiceClient messagingGraph = GetGraphClientUnsafe(messagingToken);
+
+            var members = await messagingGraph.Groups[teamId].Members.Request().GetAsync();
+            if (!members.Any(member => member.Id == me.Id))
+                FailAuth(requestCookies, responseCookies);
+            // to do - figure out if this handles paging, for the case where there's more than 500 users in a team
+
+            // Alternate approach:
+            //bool userIsMember = false;
+            //var checks = graph.Groups[teamId].CheckMemberObjects(new string[] { UserFromToken() }).Request().PostAsync();
+            //foreach (var c in await checks)
+            //{
+            //    if (c == UserFromToken())
+            //        userIsMember = true;
+            //}
+
+            return GetGraphClientUnsafe(messagingToken);
+        }
+
+        private static async Task<string> GetAppPermissionToken(string tenant, Nullable<bool> useRSC)
+        {
+            string appId = GetGraphAppId(useRSC);
+            string appSecret = Uri.EscapeDataString(GetGraphAppPassword(useRSC));
+
+            string response = await HttpHelpers.POST($"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
+                    $"grant_type=client_credentials&client_id={appId}&client_secret={appSecret}"
+                    + "&scope=https%3A%2F%2Fgraph.microsoft.com%2F.default");
+            string token = response.Deserialize<TokenResponse>().access_token;
+            return token;
+        }
+
+        public static void ProcessAadCallbackAndStoreUserToken(HttpContextBase httpContext, HttpCookieCollection cookies)
+        {
+            string req_txt;
+            using (StreamReader reader = new StreamReader(httpContext.Request.InputStream))
+            {
+                req_txt = reader.ReadToEnd();
+            }
+            string token = Authorization.ParseOauthResponse(req_txt);
+            cookies.Add(new System.Web.HttpCookie("GraphToken", token));
+
+            // Ideally we would store the token on the server and never send it to the 
+            // client, since in this app the client doesn't make Graph calls directly. 
+            // But it's not a big deal to send the user delegated token down, 
+            // and if the client app actually used it we would do so without reservation.
+            // Never put an application permissions token in a cookie, though.
+        }
+
+        // Returns the appid for user delegated use
+        public static string GetGraphAppId(Nullable<bool> useRSC)
+        {
+            bool usingRSC = (useRSC != false);
+            if (usingRSC)
+                return ConfigurationManager.AppSettings["GraphRSCAppId"];
+            else
+                return ConfigurationManager.AppSettings["GraphNoRSCAppId"];
+        }
+
+        // Returns the appid for user delegated use
+        public static string GetGraphAppPassword(Nullable<bool> useRSC)
+        {
+            bool usingRSC = (useRSC != false);
+            if (usingRSC)
+                return ConfigurationManager.AppSettings["GraphRSCAppPassword"];
+            else
+                return ConfigurationManager.AppSettings["GraphNoRSCAppPassword"];
+        }
+    }
+
+    public class AuthModel
+    {
+        public string GraphAppId;
+    }
+
     public class HomeController : Controller
     {
         [Route("")]
@@ -81,65 +314,34 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             }
         }
 
-        [Route("Auth")]
-        public ActionResult Auth()
+        [Route("AuthRSC")]
+        public ActionResult AuthRSC()
         {
-            return View("Auth");
+            bool useRSC = true;
+            var model = new AuthModel() { GraphAppId = Authorization.GetGraphAppId(useRSC) };
+            return View("Auth", model);
         }
+
+        [Route("AuthNoRSC")]
+        public ActionResult AuthNoRSC()
+        {
+            bool useRSC = false;
+            var model = new AuthModel() { GraphAppId = Authorization.GetGraphAppId(useRSC) };
+            return View("Auth", model);
+        }
+
+        //public ActionResult Auth([FromUri(Name = "useRSC")] Nullable<bool> useRSC)
+        //{
+        //    var model = new AuthModel() { GraphAppId = Authorization.GetGraphAppId(useRSC) };
+        //    return View("Auth", model);
+        //}
 
         [Route("authdone")]
         [HttpPost]
         public async Task<ActionResult> AuthDone()
         {
-            string req_txt;
-            using (StreamReader reader = new StreamReader(HttpContext.Request.InputStream))
-            {
-                req_txt = reader.ReadToEnd();
-            }
-            string token = ParseOauthResponse(req_txt);
-            GraphServiceClient graph = GetAuthenticatedClient(token);
-            var u = await (graph.Me.Request().GetAsync());
-
+            Authorization.ProcessAadCallbackAndStoreUserToken(this.HttpContext, this.Response.Cookies);
             return View("AuthDone");
-        }
-
-        // Also store the token in a cookie so the client can pass it back to us later
-        public string ParseOauthResponse(string oathResponse)
-        {
-            //access_token =...
-            //& token_type = Bearer
-            //& expires_in = 3599
-            //& id_token =...
-            //& state = 75
-            //& session_state = 430b10b4 - 262d - 49fe - af9d - e1fae258587b
-
-            // Because of the way we have setup the url, idtoken comes in the body in xxx-form format.
-            string access_token = oathResponse.Split('&')[0].Split('=')[1];
-            string state = oathResponse.Split('&')[1].Split('=')[1];
-            //string[] stateParts = Uri.UnescapeDataString(state).Split(new string[] { "__" }, StringSplitOptions.None);
-            //string teamId = stateParts[0];
-            //string channelId = stateParts[1];
-            //string messageId = stateParts[2];
-
-            //var resp =
-            //await HttpHelpers.POST("https://login.microsoftonline.com/common/oauth2/v2.0/token",
-            //    $"client_id={appId}" +
-            //            $"&scope={Uri.EscapeDataString(graphScopes)}" +
-            //            $"&code={authn_token}" +
-            //            $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
-            //            $"&grant_type=authorization_code" +
-            //            $"&client_secret={Uri.EscapeDataString(appSecret)}"
-            //            );
-
-            //var bearer = JsonConvert.DeserializeObject<BearerResponse>(resp);
-            //string token = bearer.access_token;
-
-            Response.Cookies.Add(new System.Web.HttpCookie("GraphToken", access_token));
-            return access_token;
-
-            //Response.Cookies.Append("GraphToken", token);
-            //string url = $"~/Home/QandA?teamId={teamId}&channelId={channelId}&messageId={messageId}";
-            //return Redirect(url);
         }
 
         [Route("hello")]
@@ -161,43 +363,38 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             )
         {
             bool usingRSC = (useRSC != false);
-
-            string token;
-            if (usingRSC)
-            {
-                token = await GetToken(tenantId);
-            }
-            else
-            {
-                var cookie = Request.Cookies["GraphToken"];
-                token = cookie == null ? null : cookie.Value;
-                //token = Request.Cookies["GraphToken"].Value;
-            }
-            //token = null;
-
-            QandAModel model = GetModel(tenantId, teamId, channelId, "");
-            QandAModelWrapper wrapper = new QandAModelWrapper() { model = model, useRSC = usingRSC, showLogin = (token == null) };
-
             try
             {
-                GraphServiceClient graph = GetAuthenticatedClient(token);
+                // Do our auth check first
+                GraphServiceClient graph = await Authorization.GetGraphClient(teamId, Request.Cookies, Response.Cookies, useRSC);
 
-                if (skipRefresh != true && !wrapper.showLogin)
+                QandAModel model = GetModel(tenantId, teamId, channelId, "");
+                QandAModelWrapper wrapper = new QandAModelWrapper() {
+                    useRSC = usingRSC,
+                    showLogin = false,
+                    model = model
+                };
+
+                if (skipRefresh != true)
                 {
                     await RefreshQandA(model, graph);
-                    if (usingRSC)
+                    if (usingRSC) // not available w/ user delegated permissions
                     {
                         await CreateSubscription(channelId, model, graph);
                     }
                 }
                 ViewBag.MyModel = model;
                 return View("First", wrapper);
-                //return View("First", model);
-            } catch (Exception e) when (e.Message.Contains("Unauthorized") || e.Message.Contains("Access token has expired."))
+            }
+            catch (Exception e) when (e.Message.Contains("Unauthorized") || e.Message.Contains("Access token has expired."))
             {
-                // token expired
-                Response.Cookies.Remove("GraphToken");
-                wrapper.showLogin = true;
+                // missing, bad, or expired token
+                QandAModelWrapper wrapper = new QandAModelWrapper()
+                {
+                    useRSC = usingRSC,
+                    showLogin = true,
+                    model = null
+                };
                 return View("First", wrapper);
             }
         }
@@ -253,6 +450,8 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             QandAModel model = GetModel(tenantId, teamId, channelId, ""); //messageId);
             //model.IsQuestionAnswered[replyId] = true;
             model.IsQuestionAnswered[messageId] = true;
+            
+            // to-do -- consider escaping these parameters, even though they aren't trusted on the other end
             string url = $"~/First?tenantId={tenantId}&teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true&useRSC=false";
             return Redirect(url);
         }
@@ -272,7 +471,6 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             string url = $"~/First?tenantId={tenantId}&teamId={teamId}&channelId={channelId}&messageId={messageId}&skipRefresh=true&useRSC=false";          
             return Redirect(url);
         }
-
 
         public async Task RefreshQandA(QandAModel qAndA, GraphServiceClient graph)
         {
@@ -307,7 +505,8 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 //await UpdateCard(qAndA);
             } catch (Exception e)
             {
-                string m = String.Format("{0}\n {1}\n {2}\n {3}\n --- trace {4}", handle.GetHttpRequestMessage().GetRequestContext().ClientRequestId,
+                string m = String.Format("{0}\n {1}\n {2}\n {3}\n --- trace {4}", 
+                    handle.GetHttpRequestMessage().GetRequestContext().ClientRequestId,
                     handle.GetHttpRequestMessage().Method,
                     handle.GetHttpRequestMessage().RequestUri,
                     handle.GetHttpRequestMessage().Content,
@@ -340,9 +539,12 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             return true;
         }
 
-
         private QandAModel GetModel(string tenantId, string teamId, string channelId, string messageId)
         {
+            // TODO: Validate the user has access to the team (or at least the tenant) before retrieving the model. 
+            // It's not critical right now since we'll fail out when we make the inevitable Graph calls to
+            // update the model, but it's a little fragile.
+
             string key = QandAModel.Encode(tenantId, teamId, channelId, messageId);
             QandAModel model;
             if (QandAModel.qAndALookup.ContainsKey(key))
@@ -355,38 +557,6 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 QandAModel.qAndALookup[key] = model;
             }
             return model;
-        }
-
-        private static async Task<string> GetToken(string tenant)
-        {
-            string appId = "cb38cf54-ac89-4a7a-9ea3-095d3d080037";// ConfigurationManager.AppSettings["ida:GraphAppId"];
-            string redirectUri = ConfigurationManager.AppSettings["ida:RedirectUri"];
-            string appSecret = Uri.EscapeDataString("oj/2aJkt391=rZEpIzfxIkvTKbjIKV][");
-            //ConfigurationManager.AppSettings["ida:GraphAppPassword"]);
-            //string tenant = "139d16b4-7223-43ad-b9a8-674ba63c7924";
-
-            string response = await HttpHelpers.POST($"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
-                    $"grant_type=client_credentials&client_id={appId}&client_secret={appSecret}"
-                    + "&scope=https%3A%2F%2Fgraph.microsoft.com%2F.default");
-            string token = response.Deserialize<TokenResponse>().access_token;
-            return token;
-        }
-
-        public static GraphServiceClient GetAuthenticatedClient(string token)
-        {
-            var graphClient = new GraphServiceClient(
-                new DelegateAuthenticationProvider(
-                    requestMessage =>
-                    {
-                        // Append the access token to the request.
-                        requestMessage.Headers.Authorization = new AuthenticationHeaderValue("bearer", token);
-
-                        // Get event times in the current time zone.
-                        requestMessage.Headers.Add("Prefer", "outlook.timezone=\"" + TimeZoneInfo.Local.Id + "\"");
-
-                        return Task.CompletedTask;
-                    }));
-            return graphClient;
         }
 
         [Route("second")]

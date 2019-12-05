@@ -72,9 +72,10 @@
 })();
 
 
-function showLogin() {
+function showLogin(useRSC) {
+    var authPath = useRSC ? "/AuthRSC" : "/AuthNoRSC";
     microsoftTeams.authentication.authenticate({
-        url: window.location.origin + "/Auth", //"/tab-auth/simple-start",
+        url: window.location.origin + authPath,
         width: 600,
         height: 535,
         successCallback: function (result) {
