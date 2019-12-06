@@ -58,9 +58,32 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
     internal static class Authorization
     {
+        private class Tokens
+        {
+            internal string userToken;
+            internal string messagingToken;
+            internal string webhookToken;
+        }
+
         // As part of creating the Graph Client, this method acquires all the necessary 
         // tokens, and checks that the user has access to the team.
         public static async Task<GraphServiceClient> GetGraphClient(string teamId, HttpCookieCollection requestCookies, HttpCookieCollection responseCookies, bool useRSC)
+        {
+            var tokens = await GetTokens(teamId, requestCookies, responseCookies, useRSC);
+            return GetGraphClientUnsafe(tokens.messagingToken);
+        }
+
+        //As part of creating the Graph Client, this method acquires all the necessary
+        //tokens, and checks that the user has access to the team.
+        public static async Task<GraphServiceClient> GetGraphClientForCreatingWebhooks(string teamId, HttpCookieCollection requestCookies, HttpCookieCollection responseCookies, bool useRSC)
+        {
+            var tokens = await GetTokens(teamId, requestCookies, responseCookies, useRSC);
+            return GetGraphClientUnsafe(tokens.webhookToken);
+        }
+
+        // This method acquires all the necessary 
+        // tokens, and checks that the user has access to the team.
+        private static async Task<Tokens> GetTokens(string teamId, HttpCookieCollection requestCookies, HttpCookieCollection responseCookies, bool useRSC)
         {
             // There's potentially two tokens – the user delegated token, which provide the user's identity, 
             // and the main token which allows the app to make useful API calls. When not using RSC, it's 
@@ -113,7 +136,12 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             //        userIsMember = true;
             //}
 
-            return GetGraphClientUnsafe(messagingToken);
+            string webhookToken =
+                useRSC
+                ? messagingToken // Same code as the next line, except in the RSC case we've already called GetAppPermissionToken()
+                : await GetAppPermissionToken(tenantId, useRSC);
+
+            return new Tokens() { userToken = userToken, messagingToken = messagingToken, webhookToken = webhookToken };
         }
 
         private static string GetTokenFromCookie(HttpCookieCollection cookies)
@@ -294,10 +322,8 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 if (skipRefresh != true)
                 {
                     await RefreshQandA(model, graph);
-                    if (usingRSC) // not available w/ user delegated permissions
-                    {
-                        await CreateSubscription(channelId, model, graph);
-                    }
+                    GraphServiceClient graphForWebhooks = await Authorization.GetGraphClientForCreatingWebhooks(teamId, Request.Cookies, Response.Cookies, usingRSC);
+                    await CreateSubscription(channelId, model, graphForWebhooks);
                 }
                 ViewBag.MyModel = model;
                 return View("First", wrapper);
@@ -359,7 +385,8 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 ChangeType = "created,updated,deleted",
                 NotificationUrl = ConfigurationManager.AppSettings["NotificationUrl"],
                 ClientState = Guid.NewGuid().ToString(),
-                ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 10, seconds: 0),
+                //ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 10, seconds: 0),
+                ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 5, seconds: 0),
                 IncludeProperties = true
             };
 
