@@ -60,13 +60,12 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
     {
         // As part of creating the Graph Client, this method acquires all the necessary 
         // tokens, and checks that the user has access to the team.
-        public static async Task<GraphServiceClient> GetGraphClient(string teamId, HttpCookieCollection requestCookies, HttpCookieCollection responseCookies, Nullable<bool> useRSC)
+        public static async Task<GraphServiceClient> GetGraphClient(string teamId, HttpCookieCollection requestCookies, HttpCookieCollection responseCookies, bool useRSC)
         {
             // There's potentially two tokens – the user delegated token, which provide the user's identity, 
             // and the main token which allows the app to make useful API calls. When not using RSC, it's 
             // all the same token. But when using RSC, the second token is an RSC/application permissions token.
             // I recommend using the same appid for both tokens, but you don't have to.
-            bool usingRSC = (useRSC != false);
 
             string userToken = GetTokenFromCookie(requestCookies);
 
@@ -94,7 +93,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             string tenantId = GetTenant(userToken);
 
             string messagingToken =
-                usingRSC
+                useRSC
                 ? await GetAppPermissionToken(tenantId, useRSC)
                 : userToken;
 
@@ -156,7 +155,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             return GetTokenClaim(token, "tid");
         }
 
-        private static async Task<string> GetAppPermissionToken(string tenant, Nullable<bool> useRSC)
+        private static async Task<string> GetAppPermissionToken(string tenant, bool useRSC)
         {
             string appId = GetGraphAppId(useRSC);
             string appSecret = Uri.EscapeDataString(GetGraphAppPassword(useRSC));
@@ -283,7 +282,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             try
             {
                 // Do our auth check first
-                GraphServiceClient graph = await Authorization.GetGraphClient(teamId, Request.Cookies, Response.Cookies, useRSC);
+                GraphServiceClient graph = await Authorization.GetGraphClient(teamId, Request.Cookies, Response.Cookies, usingRSC);
 
                 QandAModel model = GetModel(tenantId, teamId, channelId, "");
                 QandAModelWrapper wrapper = new QandAModelWrapper() {
@@ -347,12 +346,6 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         public ActionResult Index()
         {
             return View();
-        }
-
-        [Route("hello")]
-        public ActionResult Hello()
-        {
-            return View("Index");
         }
 
         private static Dictionary<string, string> channelToSubscription
