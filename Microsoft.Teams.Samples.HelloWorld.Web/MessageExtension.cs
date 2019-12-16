@@ -41,8 +41,8 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web
         {
             var card = new ThumbnailCard
             {
-                Title = !string.IsNullOrWhiteSpace(title) ? title : Faker.Lorem.Sentence(),
-                Text = Faker.Lorem.Paragraph(),
+                Title = !string.IsNullOrWhiteSpace(title) ? title : "hello world",
+                Text = "blah blah blah",
                Images = new System.Collections.Generic.List<CardImage> { new CardImage("http://lorempixel.com/640/480?rand=" + DateTime.Now.Ticks.ToString()) }
             };
             

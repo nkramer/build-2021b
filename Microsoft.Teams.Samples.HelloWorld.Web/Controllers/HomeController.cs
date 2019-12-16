@@ -13,6 +13,8 @@ using System.IO;
 using System.Web;
 using System.Net;
 using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 {
@@ -377,6 +379,33 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         private static Dictionary<string, string> channelToSubscription
             = new Dictionary<string, string>();
 
+        private static string _selfSignedCert = null;
+        private static string SelfSignedCert
+        {
+            get
+            {
+                if (_selfSignedCert == null)
+                {
+                    //var rsa = RSA.Create();
+                    var ecdsa = ECDsa.Create(); // generate asymmetric key pair
+                    var req = new CertificateRequest("cn=foobar", ecdsa, HashAlgorithmName.SHA256);
+                    var cert = req.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(5));
+
+                    //// Create PFX (PKCS #12) with private key
+                    //System.IO.File.WriteAllBytes("c:\\temp\\mycert.pfx", cert.Export(X509ContentType.Pfx, "P@55w0rd"));
+
+                    //// Create Base 64 encoded CER (public key only)
+                    //System.IO.File.WriteAllText("c:\\temp\\mycert.cer",
+                    //    "-----BEGIN CERTIFICATE-----\r\n"
+                    //    + Convert.ToBase64String(cert.Export(X509ContentType.Cert), Base64FormattingOptions.InsertLineBreaks)
+                    //    + "\r\n-----END CERTIFICATE-----");
+
+                    _selfSignedCert = Convert.ToBase64String(cert.Export(X509ContentType.Cert));
+                }
+                return _selfSignedCert;
+            }
+        }
+
         private static async Task CreateSubscription(string channelId, QandAModel model, GraphServiceClient graph)
         {
             var subscription = new Subscription
@@ -386,8 +415,43 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 NotificationUrl = ConfigurationManager.AppSettings["NotificationUrl"],
                 ClientState = Guid.NewGuid().ToString(),
                 //ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 10, seconds: 0),
-                ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 5, seconds: 0),
-                IncludeProperties = true
+                ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 1, seconds: 0),
+                //IncludeProperties = true,
+                LifecycleNotificationUrl = "https://qna.ngrok.io/webhookLifecyle",
+                AdditionalData = new Dictionary<string, object>() {
+                    ["includeResourceData"] = false,
+                    ["encryptionCertificate"] = SelfSignedCert,
+//                    ["encryptionCertificate"] = @"MIIFHjCCAwagAwIBAgIQcSr2pxNpUJ9Eij0SM7QcHjANBgkqhkiG9w0BAQsFADAi
+//MSAwHgYDVQQDDBdXZWJob29rIGVuY3J5cHRpb24gdGVzdDAeFw0xOTEyMTMyMDA5
+//NTFaFw0yMDEyMTMyMDI5NTFaMCIxIDAeBgNVBAMMF1dlYmhvb2sgZW5jcnlwdGlv
+//biB0ZXN0MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAr7Vg+6RcFPgP
+//SFCItg+34d6B/j6UANKEiAOoODIqMI2mqlrQQC6QFsUdGDQBgjkXz3VB6t+dtQPj
+//dYV7hrp7fcrAi6alATh1jospaO/ZUgcqABiDHMUXMGtW/w0qk6qofmTpqsWQYJtm
+//EdXVlwhIgkU6JsdIZRrBijnYaXOnZt6YCYpAEqvAelyv6JROGQguv/vzCkpO6WGI
+//20PZzIyl7S8SMIYHMcI/1aeXeSOlCpeMpF3g3eCPEADZkquY46r7nKcW+tEN5XMp
+//+kJVNGeBcZ3wh5RZinxMU47wM73dqX7w5hNMwzJJR/L1ZYgbvjJjJi8p0ieI3UUv
+//llgPod1xCsWrHMMdidWGqymROzpcmGC0XcO5HB5J+r1jLzEq1TJxkMYM8Im0j1AY
+//BZHdmI2vDS4o5BhrxRWtiTqmuM1nyvaF5DYNhmI0iTy/v/SUTzzoI3rFqArMl5k9
+//pR+zbPUL4owodD0tIM6Ncd6K2f1nGbzsWkE2nd0/6/yVtRO3k42ZcfjQdXjAEGg/
+//BtMTNHm0cqh8DofI6xg4PMVGDoJvG+QjbjAIqZeoh1ANjvIdFPPhoPTaTDc4CZuM
+//rfeoDydDRgnelDOfSb4qnWjYKlMHalLi39uATj2R6vKbtMlQaKSJ/TZ/UC6c1ixP
+//3mYuOGCg2dGP5AspxOEyGOXqA02lzxUCAwEAAaNQME4wDgYDVR0PAQH/BAQDAgWg
+//MB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDATAdBgNVHQ4EFgQU9732zscm
+//Wb9Bsh7/mYs5LPqQO5YwDQYJKoZIhvcNAQELBQADggIBAFfUB5DskRdwer8NBczU
+//qxY72aY/1zx41/C05QjFyKRD5qwmgQ+CudXe1sfwHYm41XDlZ7T5qt8t09Y/W2PL
+//lFtG6U8Z1BXYnRBzknIK7W5JClRcURgLfAcP4VbGpsKXNYo2zHZp351mmB6xmE7k
+//xFC3v3yobJCkyPVjqAdvw5fciy2RA3nwG426m8yZ+F3dmHCufKfAGXWUY5Hb8s0q
+//f6fuLrYAaoRQelbhVFaLDDxIaeXA3hLyIzjHMaEh7La45fOeqZkLllVArtEM+TN6
+//8hgFYSrYU7zp6hT8sqoJKYDlBI+4WqMYgX70AmtLNRxnDZWdxsW367bBMOMx7qdL
+//P1AFXtsl4/JY9CDLxka4OKYc0G7ngA6VYV0fsE4cBUkbsrgugV1ngcWii3o0o3/J
+//ha+UZJnf5JiGm4R/Sd7rRM1PXBHA2lGEq/mTqavrjS7VZpZGtGyWPszgC2mQno+w
+////6UBWNT6oZ+VonK7d+GrEr9PL6VO2YG0hWysWOxpyTRJy5q6iaynt0Xb2/86sOz
+//NuEWwKtKZ4jjt1L1TG0Rx8rmEJtuLaWztyylRshy2Hz6Wk456oWm9YW8IpibYO2Q
+//f/xBSKqxe8P1CQdE9mr/aMauwXKLALO7Njh2LDDPE4tLvyfvnBsiXYaMr5r49NSK
+//hT5ib6yhi28TyVa04/wlAl5+",
+                    ["encryptionCertificateId"] = "testcert",
+
+                }
             };
 
             try
@@ -435,6 +499,25 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 // signal clients
                 Broadcaster.Broadcast();
                 return new ContentResult() { Content = "", ContentType = "text/plain", ContentEncoding = System.Text.Encoding.UTF8 };
+            }
+        }
+
+        // Callback
+        [Route("webhookLifecyle")]
+        [HttpPost]
+        public ActionResult WebhookLifecyle()
+        {
+            var encodedString = this.Request.QueryString["validationToken"];
+            if (encodedString != null)
+            {
+                // Ack the webhook subscription
+                var decodedString = HttpUtility.UrlDecode(encodedString);
+                var res = new ContentResult() { Content = decodedString, ContentType = "text/plain", ContentEncoding = System.Text.Encoding.UTF8 };
+                return res;
+            } else
+            {
+                Debug.Fail("To do -- handle authorization challenge");
+                return null;
             }
         }
 
