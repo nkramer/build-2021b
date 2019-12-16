@@ -287,3 +287,4 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 /Microsoft.Teams.Samples.HelloWorld.Web/Web.config.secrets
+/webhook-test-cert.cer
