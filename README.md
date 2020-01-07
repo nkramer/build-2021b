@@ -28,8 +28,7 @@ Key files:
 
 ## Demo script
 
-git clone https://github.com/nkramer/graphbot.git -b signalr
-(note branch)
+git clone https://github.com/nkramer/graphbot.git 
 
 Q&A Tracker is a tab that uses resource-specific consent to read messages and get notified of new messages (Webhooks). It also installs a bot but you should ignore that for now. It should not be used in the production tenant until some additional security work is done in the app.
 
