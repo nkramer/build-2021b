@@ -452,6 +452,10 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 {
                     // refresh subscription
                     var subId = channelToSubscription[channelId];
+
+                    // Since this is a fake encryption subscription, we can't update the encryption properties
+                    subscription.AdditionalData = null;
+
                     var newSubscription = await graph.Subscriptions[subId].Request().UpdateAsync(subscription);
                 }
                 else
