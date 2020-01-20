@@ -158,11 +158,11 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
         private static void FailAuth(HttpCookieCollection requestCookies, HttpCookieCollection responseCookies)
         {
-            Logout(requestCookies, responseCookies);
+            Logout(responseCookies);
             throw new Exception("Unauthorized user!");
         }
 
-        public static void Logout(HttpCookieCollection requestCookies, HttpCookieCollection responseCookies)
+        public static void Logout(HttpCookieCollection responseCookies)
         {
             if (responseCookies["GraphToken"] != null)
             {
@@ -174,6 +174,9 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
     private static string GetTokenClaim(string token, string claimType)
         {
+            if (token == "access_denied")
+                return null;
+
             var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
             foreach (var claim in jwt.Claims)
             {
@@ -225,8 +228,14 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             {
                 req_txt = reader.ReadToEnd();
             }
-            string token = Authorization.ParseOauthResponse(req_txt);
-            cookies.Add(new System.Web.HttpCookie("GraphToken", token));
+            //"error=access_denied&error_description=AADSTS65004%3A+User+declined+to+consent+to+access+the+app.%0D%0ATrace+ID%3A+afeacfc3-bc28-4f52-8224-b29021045e00%0D%0ACorrelation+ID%3A+80d20882-eba5-4828-b8f8-1f12d8309051%0D%0ATimestamp%3A+2020-01-20+04%3A52%3A24Z&error_uri=https%3A%2F%2Flogin.microsoftonline.com%2Ferror%3Fcode%3D65004&state=75"
+            if (req_txt.StartsWith("error=access_denied"))
+                Logout(cookies);
+            else
+            {
+                string token = Authorization.ParseOauthResponse(req_txt);
+                cookies.Add(new System.Web.HttpCookie("GraphToken", token));
+            }
 
             // Ideally we would store the token on the server and never send it to the 
             // client, since in this app the client doesn't make Graph calls directly. 
@@ -300,6 +309,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
     {
         public string GraphAppId;
         public string Scopes;
+        public string useRSC = "true";
     }
 
     public class HomeController : Controller
@@ -360,7 +370,8 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             bool useRSC = true;
             var model = new AuthModel() {
                 GraphAppId = Authorization.GetGraphAppId(useRSC),
-                Scopes = "User.Read"
+                Scopes = "User.Read",
+                useRSC = "true"
             };
             return View("Auth", model);
         }
@@ -373,7 +384,8 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             var model = new AuthModel()
             {
                 GraphAppId = Authorization.GetGraphAppId(useRSC),
-                Scopes = "User.Read Group.Read.All User.Read"
+                Scopes = "User.Read Group.Read.All User.Read",
+                useRSC = "false"
             };
             return View("Auth", model);
         }
@@ -398,7 +410,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             [FromUri(Name = "useRSC")] Nullable<bool> useRSC
         )
         {
-            Authorization.Logout(Request.Cookies, Response.Cookies);
+            Authorization.Logout(Response.Cookies);
             //return ShowSignin(usingRSC);
             string url = $"~/First?tenantId={tenantId}&teamId={teamId}&channelId={channelId}&useRSC={useRSC}";
             return Redirect(url);
