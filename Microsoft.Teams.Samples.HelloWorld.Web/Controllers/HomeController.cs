@@ -158,17 +158,21 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
         private static void FailAuth(HttpCookieCollection requestCookies, HttpCookieCollection responseCookies)
         {
+            Logout(requestCookies, responseCookies);
+            throw new Exception("Unauthorized user!");
+        }
+
+        public static void Logout(HttpCookieCollection requestCookies, HttpCookieCollection responseCookies)
+        {
             if (responseCookies["GraphToken"] != null)
             {
                 // Remove invalid cookie by expiring it
                 responseCookies["GraphToken"].Expires = DateTime.Now.AddDays(-1);
                 responseCookies["GraphToken"].Value = "invalid";
             }
-
-            throw new Exception("Unauthorized user!");
         }
 
-        private static string GetTokenClaim(string token, string claimType)
+    private static string GetTokenClaim(string token, string claimType)
         {
             var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
             foreach (var claim in jwt.Claims)
@@ -295,6 +299,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
     public class AuthModel
     {
         public string GraphAppId;
+        public string Scopes;
     }
 
     public class HomeController : Controller
@@ -332,15 +337,20 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             }
             catch (Exception e) when (e.Message.Contains("Unauthorized") || e.Message.Contains("Access token has expired."))
             {
-                // missing, bad, or expired token
-                QandAModelWrapper wrapper = new QandAModelWrapper()
-                {
-                    useRSC = usingRSC,
-                    showLogin = true,
-                    model = null
-                };
-                return View("First", wrapper);
+                return ShowSignin(usingRSC);
             }
+        }
+
+        private ActionResult ShowSignin(bool usingRSC)
+        {
+            // missing, bad, or expired token
+            QandAModelWrapper wrapper = new QandAModelWrapper()
+            {
+                useRSC = usingRSC,
+                showLogin = true,
+                model = null
+            };
+            return View("First", wrapper);
         }
 
         // Start user auth flow -- get name & consent
@@ -348,7 +358,10 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         public ActionResult AuthRSC()
         {
             bool useRSC = true;
-            var model = new AuthModel() { GraphAppId = Authorization.GetGraphAppId(useRSC) };
+            var model = new AuthModel() {
+                GraphAppId = Authorization.GetGraphAppId(useRSC),
+                Scopes = "User.Read"
+            };
             return View("Auth", model);
         }
 
@@ -357,7 +370,11 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         public ActionResult AuthNoRSC()
         {
             bool useRSC = false;
-            var model = new AuthModel() { GraphAppId = Authorization.GetGraphAppId(useRSC) };
+            var model = new AuthModel()
+            {
+                GraphAppId = Authorization.GetGraphAppId(useRSC),
+                Scopes = "User.Read Group.Read.All User.Read"
+            };
             return View("Auth", model);
         }
 
@@ -368,6 +385,23 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         {
             Authorization.ProcessAadCallbackAndStoreUserToken(this.HttpContext, this.Response.Cookies);
             return View("AuthDone");
+        }
+
+        // AAD callback
+        [Route("logout")]
+        //[HttpPost]
+        public ActionResult Logout(
+            [FromUri(Name = "tenantId")] string tenantId,
+            [FromUri(Name = "teamId")] string teamId,
+            [FromUri(Name = "channelId")] string channelId,
+            [FromUri(Name = "skipRefresh")] Nullable<bool> skipRefresh,
+            [FromUri(Name = "useRSC")] Nullable<bool> useRSC
+        )
+        {
+            Authorization.Logout(Request.Cookies, Response.Cookies);
+            //return ShowSignin(usingRSC);
+            string url = $"~/First?tenantId={tenantId}&teamId={teamId}&channelId={channelId}&useRSC={useRSC}";
+            return Redirect(url);
         }
 
         [Route("")]

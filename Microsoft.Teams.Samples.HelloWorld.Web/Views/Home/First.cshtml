@@ -22,6 +22,17 @@
         margin-left: 50px;
     }
 
+    .logoutDiv {
+        margin: 8px;
+        max-width: 700px;
+        /*border-top: 1px;*/
+        margin-left: 50px;
+    }
+
+    .logout {
+        align-self: flex-end;
+    }
+
     .inner {
         display: flex;
         align-items: center;
@@ -167,12 +178,27 @@
                 </div>
             </div>
         }
+
+        <div class="logoutDiv" align="right">
+            @Html.ActionLink(linkText: "Log out",
+                                    actionName: "Logout",
+                                    controllerName: "Home",
+                                    routeValues: new
+                                    {
+                                        model.tenantId,
+                                        model.teamId,
+                                        model.channelId,
+                                        useRSC= Model.useRSC
+                                    }, //model.messageId, replyId = q.MessageId },
+                                    htmlAttributes: new { @class = "logout" })
+        </div>
     }
     else
     {
         @Html.ActionLink("Click here to sign in", "SignIn", "Account", new { area = "" }, new { @class = "btn btn-primary btn-large" })
     }
 }
+
 
 <script>
                                             var x = setInterval(function() {
