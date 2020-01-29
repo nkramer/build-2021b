@@ -13,8 +13,6 @@ using System.IO;
 using System.Web;
 using System.Net;
 using System.Diagnostics;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 {
@@ -442,6 +440,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 //}
                 //return _selfSignedCert;
 
+                // TODO: don't hardcode certs!
                 return @"MIIFHjCCAwagAwIBAgIQcSr2pxNpUJ9Eij0SM7QcHjANBgkqhkiG9w0BAQsFADAi
                     MSAwHgYDVQQDDBdXZWJob29rIGVuY3J5cHRpb24gdGVzdDAeFw0xOTEyMTMyMDA5
                     NTFaFw0yMDEyMTMyMDI5NTFaMCIxIDAeBgNVBAMMF1dlYmhvb2sgZW5jcnlwdGlv
