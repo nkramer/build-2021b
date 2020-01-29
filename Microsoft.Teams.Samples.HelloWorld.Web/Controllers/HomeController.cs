@@ -58,15 +58,37 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
     internal static class Authorization
     {
+        private class Tokens
+        {
+            internal string userToken;
+            internal string messagingToken;
+            internal string webhookToken;
+        }
+
         // As part of creating the Graph Client, this method acquires all the necessary 
         // tokens, and checks that the user has access to the team.
-        public static async Task<GraphServiceClient> GetGraphClient(string teamId, HttpCookieCollection requestCookies, HttpCookieCollection responseCookies, Nullable<bool> useRSC)
+        public static async Task<GraphServiceClient> GetGraphClient(string teamId, HttpCookieCollection requestCookies, HttpCookieCollection responseCookies, bool useRSC)
+        {
+            var tokens = await GetTokens(teamId, requestCookies, responseCookies, useRSC);
+            return GetGraphClientUnsafe(tokens.messagingToken);
+        }
+
+        //As part of creating the Graph Client, this method acquires all the necessary
+        //tokens, and checks that the user has access to the team.
+        public static async Task<GraphServiceClient> GetGraphClientForCreatingWebhooks(string teamId, HttpCookieCollection requestCookies, HttpCookieCollection responseCookies, bool useRSC)
+        {
+            var tokens = await GetTokens(teamId, requestCookies, responseCookies, useRSC);
+            return GetGraphClientUnsafe(tokens.webhookToken);
+        }
+
+        // This method acquires all the necessary 
+        // tokens, and checks that the user has access to the team.
+        private static async Task<Tokens> GetTokens(string teamId, HttpCookieCollection requestCookies, HttpCookieCollection responseCookies, bool useRSC)
         {
             // There's potentially two tokens – the user delegated token, which provide the user's identity, 
             // and the main token which allows the app to make useful API calls. When not using RSC, it's 
             // all the same token. But when using RSC, the second token is an RSC/application permissions token.
             // I recommend using the same appid for both tokens, but you don't have to.
-            bool usingRSC = (useRSC != false);
 
             string userToken = GetTokenFromCookie(requestCookies);
 
@@ -94,7 +116,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             string tenantId = GetTenant(userToken);
 
             string messagingToken =
-                usingRSC
+                useRSC
                 ? await GetAppPermissionToken(tenantId, useRSC)
                 : userToken;
 
@@ -114,7 +136,12 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             //        userIsMember = true;
             //}
 
-            return GetGraphClientUnsafe(messagingToken);
+            string webhookToken =
+                useRSC
+                ? messagingToken // Same code as the next line, except in the RSC case we've already called GetAppPermissionToken()
+                : await GetAppPermissionToken(tenantId, useRSC);
+
+            return new Tokens() { userToken = userToken, messagingToken = messagingToken, webhookToken = webhookToken };
         }
 
         private static string GetTokenFromCookie(HttpCookieCollection cookies)
@@ -129,18 +156,25 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
         private static void FailAuth(HttpCookieCollection requestCookies, HttpCookieCollection responseCookies)
         {
+            Logout(responseCookies);
+            throw new Exception("Unauthorized user!");
+        }
+
+        public static void Logout(HttpCookieCollection responseCookies)
+        {
             if (responseCookies["GraphToken"] != null)
             {
                 // Remove invalid cookie by expiring it
                 responseCookies["GraphToken"].Expires = DateTime.Now.AddDays(-1);
                 responseCookies["GraphToken"].Value = "invalid";
             }
-
-            throw new Exception("Unauthorized user!");
         }
 
-        private static string GetTokenClaim(string token, string claimType)
+    private static string GetTokenClaim(string token, string claimType)
         {
+            if (token == "access_denied")
+                return null;
+
             var jwt = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().ReadJwtToken(token);
             foreach (var claim in jwt.Claims)
             {
@@ -156,7 +190,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             return GetTokenClaim(token, "tid");
         }
 
-        private static async Task<string> GetAppPermissionToken(string tenant, Nullable<bool> useRSC)
+        private static async Task<string> GetAppPermissionToken(string tenant, bool useRSC)
         {
             string appId = GetGraphAppId(useRSC);
             string appSecret = Uri.EscapeDataString(GetGraphAppPassword(useRSC));
@@ -192,8 +226,14 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             {
                 req_txt = reader.ReadToEnd();
             }
-            string token = Authorization.ParseOauthResponse(req_txt);
-            cookies.Add(new System.Web.HttpCookie("GraphToken", token));
+            //"error=access_denied&error_description=AADSTS65004%3A+User+declined+to+consent+to+access+the+app.%0D%0ATrace+ID%3A+afeacfc3-bc28-4f52-8224-b29021045e00%0D%0ACorrelation+ID%3A+80d20882-eba5-4828-b8f8-1f12d8309051%0D%0ATimestamp%3A+2020-01-20+04%3A52%3A24Z&error_uri=https%3A%2F%2Flogin.microsoftonline.com%2Ferror%3Fcode%3D65004&state=75"
+            if (req_txt.StartsWith("error=access_denied"))
+                Logout(cookies);
+            else
+            {
+                string token = Authorization.ParseOauthResponse(req_txt);
+                cookies.Add(new System.Web.HttpCookie("GraphToken", token));
+            }
 
             // Ideally we would store the token on the server and never send it to the 
             // client, since in this app the client doesn't make Graph calls directly. 
@@ -266,6 +306,8 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
     public class AuthModel
     {
         public string GraphAppId;
+        public string Scopes;
+        public string useRSC = "true";
     }
 
     public class HomeController : Controller
@@ -283,7 +325,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             try
             {
                 // Do our auth check first
-                GraphServiceClient graph = await Authorization.GetGraphClient(teamId, Request.Cookies, Response.Cookies, useRSC);
+                GraphServiceClient graph = await Authorization.GetGraphClient(teamId, Request.Cookies, Response.Cookies, usingRSC);
 
                 QandAModel model = GetModel(tenantId, teamId, channelId, "");
                 QandAModelWrapper wrapper = new QandAModelWrapper() {
@@ -295,25 +337,28 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 if (skipRefresh != true)
                 {
                     await RefreshQandA(model, graph);
-                    if (usingRSC) // not available w/ user delegated permissions
-                    {
-                        await CreateSubscription(channelId, model, graph);
-                    }
+                    GraphServiceClient graphForWebhooks = await Authorization.GetGraphClientForCreatingWebhooks(teamId, Request.Cookies, Response.Cookies, usingRSC);
+                    await CreateSubscription(channelId, model, graphForWebhooks);
                 }
                 ViewBag.MyModel = model;
                 return View("First", wrapper);
             }
             catch (Exception e) when (e.Message.Contains("Unauthorized") || e.Message.Contains("Access token has expired."))
             {
-                // missing, bad, or expired token
-                QandAModelWrapper wrapper = new QandAModelWrapper()
-                {
-                    useRSC = usingRSC,
-                    showLogin = true,
-                    model = null
-                };
-                return View("First", wrapper);
+                return ShowSignin(usingRSC);
             }
+        }
+
+        private ActionResult ShowSignin(bool usingRSC)
+        {
+            // missing, bad, or expired token
+            QandAModelWrapper wrapper = new QandAModelWrapper()
+            {
+                useRSC = usingRSC,
+                showLogin = true,
+                model = null
+            };
+            return View("First", wrapper);
         }
 
         // Start user auth flow -- get name & consent
@@ -321,7 +366,11 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         public ActionResult AuthRSC()
         {
             bool useRSC = true;
-            var model = new AuthModel() { GraphAppId = Authorization.GetGraphAppId(useRSC) };
+            var model = new AuthModel() {
+                GraphAppId = Authorization.GetGraphAppId(useRSC),
+                Scopes = "User.Read",
+                useRSC = "true"
+            };
             return View("Auth", model);
         }
 
@@ -330,7 +379,12 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         public ActionResult AuthNoRSC()
         {
             bool useRSC = false;
-            var model = new AuthModel() { GraphAppId = Authorization.GetGraphAppId(useRSC) };
+            var model = new AuthModel()
+            {
+                GraphAppId = Authorization.GetGraphAppId(useRSC),
+                Scopes = "User.Read Group.Read.All User.Read",
+                useRSC = "false"
+            };
             return View("Auth", model);
         }
 
@@ -343,20 +397,80 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             return View("AuthDone");
         }
 
+        // AAD callback
+        [Route("logout")]
+        //[HttpPost]
+        public ActionResult Logout(
+            [FromUri(Name = "tenantId")] string tenantId,
+            [FromUri(Name = "teamId")] string teamId,
+            [FromUri(Name = "channelId")] string channelId,
+            [FromUri(Name = "skipRefresh")] Nullable<bool> skipRefresh,
+            [FromUri(Name = "useRSC")] Nullable<bool> useRSC
+        )
+        {
+            Authorization.Logout(Response.Cookies);
+            //return ShowSignin(usingRSC);
+            string url = $"~/First?tenantId={tenantId}&teamId={teamId}&channelId={channelId}&useRSC={useRSC}";
+            return Redirect(url);
+        }
+
         [Route("")]
         public ActionResult Index()
         {
             return View();
         }
 
-        [Route("hello")]
-        public ActionResult Hello()
-        {
-            return View("Index");
-        }
-
         private static Dictionary<string, string> channelToSubscription
             = new Dictionary<string, string>();
+
+        private static string _selfSignedCert = null;
+        // This cert is good enough to generate a notification, but not good enough to get a full payload in the notification.
+        private static string SelfSignedCert
+        {
+            get
+            {
+                // Commented out code requires .net 4.7
+                //if (_selfSignedCert == null)
+                //{
+                //    //var rsa = RSA.Create();
+                //    var ecdsa = ECDsa.Create(); // generate asymmetric key pair
+                //    var req = new CertificateRequest("cn=foobar", ecdsa, HashAlgorithmName.SHA256);
+                //    var cert = req.CreateSelfSigned(DateTimeOffset.Now, DateTimeOffset.Now.AddYears(5));
+                //    _selfSignedCert = Convert.ToBase64String(cert.Export(X509ContentType.Cert));
+                //}
+                //return _selfSignedCert;
+
+                // TODO: don't hardcode certs!
+                return @"MIIFHjCCAwagAwIBAgIQcSr2pxNpUJ9Eij0SM7QcHjANBgkqhkiG9w0BAQsFADAi
+                    MSAwHgYDVQQDDBdXZWJob29rIGVuY3J5cHRpb24gdGVzdDAeFw0xOTEyMTMyMDA5
+                    NTFaFw0yMDEyMTMyMDI5NTFaMCIxIDAeBgNVBAMMF1dlYmhvb2sgZW5jcnlwdGlv
+                    biB0ZXN0MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAr7Vg+6RcFPgP
+                    SFCItg+34d6B/j6UANKEiAOoODIqMI2mqlrQQC6QFsUdGDQBgjkXz3VB6t+dtQPj
+                    dYV7hrp7fcrAi6alATh1jospaO/ZUgcqABiDHMUXMGtW/w0qk6qofmTpqsWQYJtm
+                    EdXVlwhIgkU6JsdIZRrBijnYaXOnZt6YCYpAEqvAelyv6JROGQguv/vzCkpO6WGI
+                    20PZzIyl7S8SMIYHMcI/1aeXeSOlCpeMpF3g3eCPEADZkquY46r7nKcW+tEN5XMp
+                    +kJVNGeBcZ3wh5RZinxMU47wM73dqX7w5hNMwzJJR/L1ZYgbvjJjJi8p0ieI3UUv
+                    llgPod1xCsWrHMMdidWGqymROzpcmGC0XcO5HB5J+r1jLzEq1TJxkMYM8Im0j1AY
+                    BZHdmI2vDS4o5BhrxRWtiTqmuM1nyvaF5DYNhmI0iTy/v/SUTzzoI3rFqArMl5k9
+                    pR+zbPUL4owodD0tIM6Ncd6K2f1nGbzsWkE2nd0/6/yVtRO3k42ZcfjQdXjAEGg/
+                    BtMTNHm0cqh8DofI6xg4PMVGDoJvG+QjbjAIqZeoh1ANjvIdFPPhoPTaTDc4CZuM
+                    rfeoDydDRgnelDOfSb4qnWjYKlMHalLi39uATj2R6vKbtMlQaKSJ/TZ/UC6c1ixP
+                    3mYuOGCg2dGP5AspxOEyGOXqA02lzxUCAwEAAaNQME4wDgYDVR0PAQH/BAQDAgWg
+                    MB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDATAdBgNVHQ4EFgQU9732zscm
+                    Wb9Bsh7/mYs5LPqQO5YwDQYJKoZIhvcNAQELBQADggIBAFfUB5DskRdwer8NBczU
+                    qxY72aY/1zx41/C05QjFyKRD5qwmgQ+CudXe1sfwHYm41XDlZ7T5qt8t09Y/W2PL
+                    lFtG6U8Z1BXYnRBzknIK7W5JClRcURgLfAcP4VbGpsKXNYo2zHZp351mmB6xmE7k
+                    xFC3v3yobJCkyPVjqAdvw5fciy2RA3nwG426m8yZ+F3dmHCufKfAGXWUY5Hb8s0q
+                    f6fuLrYAaoRQelbhVFaLDDxIaeXA3hLyIzjHMaEh7La45fOeqZkLllVArtEM+TN6
+                    8hgFYSrYU7zp6hT8sqoJKYDlBI+4WqMYgX70AmtLNRxnDZWdxsW367bBMOMx7qdL
+                    P1AFXtsl4/JY9CDLxka4OKYc0G7ngA6VYV0fsE4cBUkbsrgugV1ngcWii3o0o3/J
+                    ha+UZJnf5JiGm4R/Sd7rRM1PXBHA2lGEq/mTqavrjS7VZpZGtGyWPszgC2mQno+w
+                    //6UBWNT6oZ+VonK7d+GrEr9PL6VO2YG0hWysWOxpyTRJy5q6iaynt0Xb2/86sOz
+                    NuEWwKtKZ4jjt1L1TG0Rx8rmEJtuLaWztyylRshy2Hz6Wk456oWm9YW8IpibYO2Q
+                    f/xBSKqxe8P1CQdE9mr/aMauwXKLALO7Njh2LDDPE4tLvyfvnBsiXYaMr5r49NSK
+                    hT5ib6yhi28TyVa04/wlAl5+";
+            }
+        }
 
         private static async Task CreateSubscription(string channelId, QandAModel model, GraphServiceClient graph)
         {
@@ -366,8 +480,15 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 ChangeType = "created,updated,deleted",
                 NotificationUrl = ConfigurationManager.AppSettings["NotificationUrl"],
                 ClientState = Guid.NewGuid().ToString(),
-                ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 10, seconds: 0),
-                IncludeProperties = true
+                //ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 10, seconds: 0),
+                ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 1, seconds: 0),
+                IncludeProperties = false,
+                LifecycleNotificationUrl = "https://qna.ngrok.io/webhookLifecyle",
+                AdditionalData = new Dictionary<string, object>() {
+                    ["includeResourceData"] = false,
+                    ["encryptionCertificate"] = SelfSignedCert,
+                    ["encryptionCertificateId"] = "testcert",
+                }
             };
 
             try
@@ -376,6 +497,10 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 {
                     // refresh subscription
                     var subId = channelToSubscription[channelId];
+
+                    // Since this is a fake encryption subscription, we can't update the encryption properties
+                    subscription.AdditionalData = null;
+
                     var newSubscription = await graph.Subscriptions[subId].Request().UpdateAsync(subscription);
                 }
                 else
@@ -415,6 +540,25 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 // signal clients
                 Broadcaster.Broadcast();
                 return new ContentResult() { Content = "", ContentType = "text/plain", ContentEncoding = System.Text.Encoding.UTF8 };
+            }
+        }
+
+        // Callback
+        [Route("webhookLifecyle")]
+        [HttpPost]
+        public ActionResult WebhookLifecyle()
+        {
+            var encodedString = this.Request.QueryString["validationToken"];
+            if (encodedString != null)
+            {
+                // Ack the webhook subscription
+                var decodedString = HttpUtility.UrlDecode(encodedString);
+                var res = new ContentResult() { Content = decodedString, ContentType = "text/plain", ContentEncoding = System.Text.Encoding.UTF8 };
+                return res;
+            } else
+            {
+                Debug.Fail("To do -- handle authorization challenge");
+                return null;
             }
         }
 

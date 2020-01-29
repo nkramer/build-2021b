@@ -18,7 +18,7 @@
 	},
 	"keyCredentials": [],
 	"knownClientApplications": [],
-	"logoUrl": null,
+	"logoUrl": "https://secure.aadcdn.microsoftonline-p.com/dbd5a2dd-e8dhg72xgikvk1lwkex7-aek-slvcrwwzhhtqlqs3v8/appbranding/f-w5eyv59zbjxzjcatre1nr5ophfcpewh8xvmw2vlkk/1033/bannerlogo?ts=637149016310005320",
 	"logoutUrl": null,
 	"name": "Q+A Tracker (no RSC)",
 	"oauth2AllowIdTokenImplicitFlow": true,
@@ -31,7 +31,18 @@
 		"countriesBlockedForMinors": [],
 		"legalAgeGroupRule": "Allow"
 	},
-	"passwordCredentials": [],
+	"passwordCredentials": [
+		{
+			"customKeyIdentifier": null,
+			"endDate": "2299-12-31T08:00:00Z",
+			"keyId": "556b55fd-d792-4771-88de-65eea65e9ab7",
+			"startDate": "2019-12-06T23:32:56.822Z",
+			"value": null,
+			"createdOn": "2019-12-06T23:32:57.1551481Z",
+			"hint": "69X",
+			"displayName": "Password uploaded on Fri Dec 06 2019"
+		}
+	],
 	"preAuthorizedApplications": [],
 	"publisherDomain": "teamsip.onmicrosoft.com",
 	"replyUrlsWithType": [
@@ -55,6 +66,10 @@
 				{
 					"id": "e1fe6dd8-ba31-4d61-89e7-88639da4683d",
 					"type": "Scope"
+				},
+				{
+					"id": "7b2449af-6ccd-4f4d-9f78-e550c193f0d1",
+					"type": "Role"
 				}
 			]
 		}

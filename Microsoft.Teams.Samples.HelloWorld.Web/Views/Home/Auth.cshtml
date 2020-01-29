@@ -99,11 +99,14 @@
             redirect_uri: window.location.origin + "/authdone",
             nonce: "23",
             state: state,
-            scope: ".default", // User.Read
+            scope: "@Model.Scopes", // because .default doesn't always pop a consent prompt when it should
             // The context object is populated by Teams; the loginHint attribute
             // is used as hinting information
             login_hint: context.loginHint,
         };
+        if (@Model.useRSC) {
+            queryParams.prompt = "consent";
+        }
 
         let authorizeEndpoint = "https://login.microsoftonline.com/" + context.tid + "/oauth2/authorize?" + toQueryString(queryParams);
         window.location.assign(authorizeEndpoint);

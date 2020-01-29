@@ -78,3 +78,10 @@ Demo steps:
 - Mark one or two questions as answered so the app looks more real
 - go to your other window, and type in a new question. (Must be a root message, must contain a question mark)
 - Wait ~5 seconds for it to show up in Q&A Tracker. (Most of this is webhook – despite Q&A Tracker rerunning from scratch everything on both client and server with every new message, the webhook is the slow part.)
+
+Good demo questions:
+- Are we open for the holidays?
+- Is the business growing?
+- How do we beat the competition?
+- Are we moving offices?
+- Are we done yet?

@@ -1,74 +1,74 @@
 {
-	"id": "2c3e0783-e4e1-43a3-ae19-0f5f8e7ad797",
-	"acceptMappedClaims": null,
-	"accessTokenAcceptedVersion": 2,
-	"addIns": [],
-	"allowPublicClient": null,
-	"appId": "cb38cf54-ac89-4a7a-9ea3-095d3d080037",
-	"appRoles": [],
-	"oauth2AllowUrlPathMatching": false,
-	"createdDateTime": "2019-10-16T20:54:17Z",
-	"groupMembershipClaims": null,
-	"identifierUris": [],
-	"informationalUrls": {
-		"termsOfService": null,
-		"support": null,
-		"privacy": null,
-		"marketing": null
-	},
-	"keyCredentials": [],
-	"knownClientApplications": [],
-	"logoUrl": null,
-	"logoutUrl": null,
-	"name": "Q+A Tracker (RSC)",
-	"oauth2AllowIdTokenImplicitFlow": true,
-	"oauth2AllowImplicitFlow": true,
-	"oauth2Permissions": [],
-	"oauth2RequirePostResponse": false,
-	"optionalClaims": null,
-	"orgRestrictions": [],
-	"parentalControlSettings": {
-		"countriesBlockedForMinors": [],
-		"legalAgeGroupRule": "Allow"
-	},
-	"passwordCredentials": [
-		{
-			"customKeyIdentifier": null,
-			"endDate": "2299-12-31T08:00:00Z",
-			"keyId": "9c866a7d-efbb-4a4d-a1fb-cf19bbeba4e0",
-			"startDate": "2019-12-05T00:35:31.335Z",
-			"value": null,
-			"createdOn": "2019-12-05T00:35:32.1625812Z",
-			"hint": "K9E",
-			"displayName": "Password uploaded on Wed Dec 04 2019"
-		}
-	],
-	"preAuthorizedApplications": [],
-	"publisherDomain": "teamsip.onmicrosoft.com",
-	"replyUrlsWithType": [
-		{
-			"url": "https://nkramerqnaapp.azurewebsites.net/authdone",
-			"type": "Web"
-		},
-		{
-			"url": "https://qna.ngrok.io/authdone",
-			"type": "Web"
-		}
-	],
-	"requiredResourceAccess": [
-		{
-			"resourceAppId": "00000003-0000-0000-c000-000000000000",
-			"resourceAccess": [
-				{
-					"id": "e1fe6dd8-ba31-4d61-89e7-88639da4683d",
-					"type": "Scope"
-				}
-			]
-		}
-	],
-	"samlMetadataUrl": null,
-	"signInUrl": null,
-	"signInAudience": "AzureADandPersonalMicrosoftAccount",
-	"tags": [],
-	"tokenEncryptionKeyId": null
+  "id": "2c3e0783-e4e1-43a3-ae19-0f5f8e7ad797",
+  "acceptMappedClaims": null,
+  "accessTokenAcceptedVersion": 2,
+  "addIns": [],
+  "allowPublicClient": null,
+  "appId": "cb38cf54-ac89-4a7a-9ea3-095d3d080037",
+  "appRoles": [],
+  "oauth2AllowUrlPathMatching": false,
+  "createdDateTime": "2019-10-16T20:54:17Z",
+  "groupMembershipClaims": null,
+  "identifierUris": [],
+  "informationalUrls": {
+    "termsOfService": null,
+    "support": null,
+    "privacy": null,
+    "marketing": null
+  },
+  "keyCredentials": [],
+  "knownClientApplications": [],
+  "logoUrl": "https://secure.aadcdn.microsoftonline-p.com/dbd5a2dd-e8dhg72xgikvk1lwkex7-aek-slvcrwwzhhtqlqs3v8/appbranding/amjwhyvut7w0d59fbckj29qcy5hvz8vvhpz3qs-2keq/1033/bannerlogo?ts=637149015854775288",
+  "logoutUrl": null,
+  "name": "Q+A Tracker (RSC)",
+  "oauth2AllowIdTokenImplicitFlow": true,
+  "oauth2AllowImplicitFlow": true,
+  "oauth2Permissions": [],
+  "oauth2RequirePostResponse": false,
+  "optionalClaims": null,
+  "orgRestrictions": [],
+  "parentalControlSettings": {
+    "countriesBlockedForMinors": [],
+    "legalAgeGroupRule": "Allow"
+  },
+  "passwordCredentials": [
+    {
+      "customKeyIdentifier": null,
+      "endDate": "2299-12-31T08:00:00Z",
+      "keyId": "9c866a7d-efbb-4a4d-a1fb-cf19bbeba4e0",
+      "startDate": "2019-12-05T00:35:31.335Z",
+      "value": null,
+      "createdOn": "2019-12-05T00:35:32.1625812Z",
+      "hint": "K9E",
+      "displayName": "Password uploaded on Wed Dec 04 2019"
+    }
+  ],
+  "preAuthorizedApplications": [],
+  "publisherDomain": "teamsip.onmicrosoft.com",
+  "replyUrlsWithType": [
+    {
+      "url": "https://nkramerqnaapp.azurewebsites.net/authdone",
+      "type": "Web"
+    },
+    {
+      "url": "https://qna.ngrok.io/authdone",
+      "type": "Web"
+    }
+  ],
+  "requiredResourceAccess": [
+    {
+      "resourceAppId": "00000003-0000-0000-c000-000000000000",
+      "resourceAccess": [
+        {
+          "id": "e1fe6dd8-ba31-4d61-89e7-88639da4683d",
+          "type": "Scope"
+        }
+      ]
+    }
+  ],
+  "samlMetadataUrl": null,
+  "signInUrl": null,
+  "signInAudience": "AzureADMultipleOrgs",
+  "tags": [],
+  "tokenEncryptionKeyId": null
 }
