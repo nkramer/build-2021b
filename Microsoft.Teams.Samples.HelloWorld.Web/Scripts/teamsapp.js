@@ -77,7 +77,7 @@ function showLogin(useRSC) {
     microsoftTeams.authentication.authenticate({
         url: window.location.origin + authPath,
         width: 600,
-        height: 535,
+        height: 600,
         successCallback: function (result) {
             window.location.reload(true);
             getUserProfile(result.accessToken);

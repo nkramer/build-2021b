@@ -104,9 +104,9 @@
             // is used as hinting information
             login_hint: context.loginHint,
         };
-        if (@Model.useRSC) {
+        @*if (@Model.useRSC) {
             queryParams.prompt = "consent";
-        }
+        }*@
 
         let authorizeEndpoint = "https://login.microsoftonline.com/" + context.tid + "/oauth2/authorize?" + toQueryString(queryParams);
         window.location.assign(authorizeEndpoint);

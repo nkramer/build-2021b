@@ -482,10 +482,10 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 ClientState = Guid.NewGuid().ToString(),
                 //ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 10, seconds: 0),
                 ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 1, seconds: 0),
-                IncludeProperties = false,
+                IncludeProperties = true,
                 LifecycleNotificationUrl = "https://qna.ngrok.io/webhookLifecyle",
                 AdditionalData = new Dictionary<string, object>() {
-                    ["includeResourceData"] = false,
+                    ["includeResourceData"] = true,
                     ["encryptionCertificate"] = SelfSignedCert,
                     ["encryptionCertificateId"] = "testcert",
                 }
