@@ -26,6 +26,14 @@ Key files:
 - Microsoft.Teams.Samples.HelloWorld.Web\Views\Home\Auth.cshtml and  Microsoft.Teams.Samples.HelloWorld.Web\Views\Home\AuthDone.cshtml and Microsoft.Teams.Samples.HelloWorld.Web\Scripts\teamsapp.js get the user delegated token for the tab.
 - AAD-appregistrations has info on how to set up your AAD app registrations. This sample is currently set up with the bot using the same app registration as the RSC graph app, I'm not sure I would do that again – bot framework registrations are set up to use AAD v2 tokens, and that creates a problem where AAD won't show a consent prompt when it's needed unless you explicitly pass in prompt=consent. Currently I'm granting consent for the user token in the admin portal, which is not how you'd want to ship a real multitenant app.
 
+## Installation
+I haven't had a chance to write up setup instructions for this app, but it's the same basic steps as copying anyone's Teams app that uses Graph:
+- register your own Graph/AAD appid
+- set the app up for implicit flow auth, w/ endpoint yourdomain/authdone
+- add the appropriate user delegated permissions to that app – I believe it's just User.Read
+- Update the teams app manifest with that graph appid, and change the tab URLs to point to wherever your hosting your app. (ngrok presumably, since Azure hosting doesn't work with webhooks yet)
+- if you want to use sideloading, make sure the graph app registration is owned by the tenant you are going to sideload into.
+
 ## Demo script
 
 git clone https://github.com/nkramer/graphbot.git 
