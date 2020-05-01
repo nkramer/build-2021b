@@ -27,12 +27,39 @@ Key files:
 - AAD-appregistrations has info on how to set up your AAD app registrations. This sample is currently set up with the bot using the same app registration as the RSC graph app, I'm not sure I would do that again – bot framework registrations are set up to use AAD v2 tokens, and that creates a problem where AAD won't show a consent prompt when it's needed unless you explicitly pass in prompt=consent. Currently I'm granting consent for the user token in the admin portal, which is not how you'd want to ship a real multitenant app.
 
 ## Installation
-I haven't had a chance to write up setup instructions for this app, but it's the same basic steps as copying anyone's Teams app that uses Graph:
-- register your own Graph/AAD appid
-- set the app up for implicit flow auth, w/ endpoint yourdomain/authdone
-- add the appropriate user delegated permissions to that app – I believe it's just User.Read
-- Update the teams app manifest with that graph appid, and change the tab URLs to point to wherever your hosting your app. (ngrok presumably, since Azure hosting doesn't work with webhooks yet)
-- if you want to use sideloading, make sure the graph app registration is owned by the tenant you are going to sideload into.
+
+To register a Graph app for RSC:
+- Create Web.config.secrets in the Microsoft.Teams.Samples.HelloWorld.Web directory:
+.......
+- Create a [new app registration](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps) in Azure Active Directory portal. It's simpler to register the app in the same tenant that you're going to run it from -- if you register in a separate tenant, you'll need to be an admin in order to sideload your app. You can do either a single tenant app or a multitenant app.
+- Specify a redirect URI -- https://whereYouHostedYourApp/authdone
+- Create the registration. 
+- Copy that appid into the GraphRSCAppId property in your Web.config.secrets 
+- Go into the Authentication tab. Under Implicit grant, check Access tokens and ID tokens.
+- Go to the Certificates & secrets tab, create a New client secret. 
+- Copy that client secret into the GraphRSCAppPassword property in your Web.config.secrets 
+
+Note -- when you install a Teams app that uses RSC, AAD will add the magical Group.Selected application permissions to your graph app registration. If you remove this permission, you will need to reinstall the app to get things working again. Depending on when you are reading this, granting tenant-wide consent to the app for non-RSC permissions (such as User.Read) may also remove Group.Selected, in which case you'll need to reinstall the Teams app.
+
+If you also want to use the non-RSC version:
+- Create a [new app registration](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps) in Azure Active Directory portal. It's simpler to register the app in the same tenant that you're going to run it from -- if you register in a separate tenant, you'll need to be an admin in order to sideload your app. You can do either a single tenant app or a multitenant app.
+- Specify a redirect URI -- https://whereYouHostedYourApp/authdone
+- Create the registration. 
+- Copy that appid into the GraphRSCAppId property in your Web.config.secrets 
+- Go to the API permissions tab. Add Group.ReadWrite.All and User.Read delegated permissions, and ChannelMessage.Read.All application permissions. 
+- Go into the Authentication tab. Under Implicit grant, check Access tokens and ID tokens.
+- Go to the Certificates & secrets tab, create a New client secret. 
+- Copy that client secret into the GraphRSCAppPassword property in your Web.config.secrets 
+
+Update your teams app manifest:
+- Open Microsoft.Teams.Samples.HelloWorld.Web\Manifest\manifest.json 
+- Update the URLs to point to whereYouHostedYourApp. You'll need to touch two places -- configurationUrl and contentUrl.
+- Update the URL in Microsoft.Teams.Samples.HelloWorld.Web\Controllers\HomeController.cs -- LifecycleNotificationUrl = ....
+- If you want to run the non-RSC version, do the same to Microsoft.Teams.Samples.HelloWorld.Web\Manifest-NoRSC\manifest.json 
+
+Build project. Launch ngrok, or otherwise host your web server. Upload your favorite version of the app to teams (manifest .zip files will be located in Microsoft.Teams.Samples.HelloWorld.Web\bin.
+
+
 
 ## Demo script
 
