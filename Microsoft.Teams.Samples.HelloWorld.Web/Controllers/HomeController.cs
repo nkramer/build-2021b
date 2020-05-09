@@ -363,8 +363,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 // Do our auth check first
                 GraphServiceClient graph = await Authorization.GetGraphClient(teamId, Request.Cookies, Response.Cookies, usingRSC);
 
-                //QandAModel model = GetModel(tenantId, teamId, channelId, "");
-                QandAModel model = new QandAModel();
+                QandAModel model = GetModel(tenantId, teamId, channelId, "");
                 QandAModelWrapper wrapper = new QandAModelWrapper()
                 {
                     useRSC = usingRSC,
