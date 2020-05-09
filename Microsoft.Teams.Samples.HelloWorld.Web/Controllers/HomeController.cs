@@ -120,28 +120,28 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 ? await GetAppPermissionToken(tenantId, useRSC)
                 : userToken;
 
-            GraphServiceClient messagingGraph = GetGraphClientUnsafe(messagingToken);
+            //GraphServiceClient messagingGraph = GetGraphClientUnsafe(messagingToken);
 
-            var members = await messagingGraph.Groups[teamId].Members.Request().GetAsync();
-            if (!members.Any(member => member.Id == me.Id))
-                FailAuth(requestCookies, responseCookies);
-            // to do - figure out if this handles paging, for the case where there's more than 500 users in a team
+            //var members = await messagingGraph.Groups[teamId].Members.Request().GetAsync();
+            //if (!members.Any(member => member.Id == me.Id))
+            //    FailAuth(requestCookies, responseCookies);
+            //// to do - figure out if this handles paging, for the case where there's more than 500 users in a team
 
-            // Alternate approach:
-            //bool userIsMember = false;
-            //var checks = graph.Groups[teamId].CheckMemberObjects(new string[] { UserFromToken() }).Request().PostAsync();
-            //foreach (var c in await checks)
-            //{
-            //    if (c == UserFromToken())
-            //        userIsMember = true;
-            //}
+            //// Alternate approach:
+            ////bool userIsMember = false;
+            ////var checks = graph.Groups[teamId].CheckMemberObjects(new string[] { UserFromToken() }).Request().PostAsync();
+            ////foreach (var c in await checks)
+            ////{
+            ////    if (c == UserFromToken())
+            ////        userIsMember = true;
+            ////}
 
-            string webhookToken =
-                useRSC
-                ? messagingToken // Same code as the next line, except in the RSC case we've already called GetAppPermissionToken()
-                : await GetAppPermissionToken(tenantId, useRSC);
+            //string webhookToken =
+            //    useRSC
+            //    ? messagingToken // Same code as the next line, except in the RSC case we've already called GetAppPermissionToken()
+            //    : await GetAppPermissionToken(tenantId, useRSC);
 
-            return new Tokens() { userToken = userToken, messagingToken = messagingToken, webhookToken = webhookToken };
+            return new Tokens() { userToken = userToken, messagingToken = messagingToken, };//webhookToken = webhookToken };
         }
 
         private static string GetTokenFromCookie(HttpCookieCollection cookies)
@@ -158,6 +158,38 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         {
             Logout(responseCookies);
             throw new Exception("Unauthorized user!");
+        }
+
+        /// <summary>
+        /// Login to the application using an access token.
+        /// </summary>
+        /// <remarks>
+        ///     This method exchanges the access token for a Graph token, and sets the same cookies that are set by the explicit login flow.
+        ///     If the exchange fails, the method throws an <see cref="Exception"/>, with the AAD response in the exception message.
+        /// </remarks>
+        /// <param name="useRSC">true if RSC is in use, false otherwise</param>
+        /// <param name="tabSsoToken">Tab SSO token, which is a user-delegated access token for this app</param>
+        /// <param name="responseCookies">Response cookie collection</param>
+        /// <returns>Tracking task</returns>
+        public static async Task TokenLoginAsync(bool useRSC, string tabSsoToken, HttpCookieCollection responseCookies)
+        {
+            string appId = GetGraphAppId(useRSC);
+            string appSecret = Uri.EscapeDataString(GetGraphAppPassword(useRSC));
+            string tenant = GetTenant(tabSsoToken);
+
+            // See https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-on-behalf-of-flow
+            string response = await HttpHelpers.POST($"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
+                $"&client_id=a67b96c2-4d02-4503-97e5-564838d3a650" +
+                    //$"&client_id={appId}" +
+                    "&client_secret=" + Uri.EscapeDataString("kd6mVe7Wk]Hs7RIi4?-tkItDeCUdW[]=") +
+                    //"&client_secret={appSecret}" +
+                    "&grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" +
+                    $"&assertion={tabSsoToken}" +
+                    "&requested_token_use=on_behalf_of" +
+                    "&scope=https%3A%2F%2Fgraph.microsoft.com%2F.default");
+            string token = response.Deserialize<TokenResponse>().access_token;
+
+            responseCookies.Add(new System.Web.HttpCookie("GraphToken", token));
         }
 
         public static void Logout(HttpCookieCollection responseCookies)
@@ -327,19 +359,21 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 // Do our auth check first
                 GraphServiceClient graph = await Authorization.GetGraphClient(teamId, Request.Cookies, Response.Cookies, usingRSC);
 
-                QandAModel model = GetModel(tenantId, teamId, channelId, "");
-                QandAModelWrapper wrapper = new QandAModelWrapper() {
+                //QandAModel model = GetModel(tenantId, teamId, channelId, "");
+                QandAModel model = new QandAModel();
+                QandAModelWrapper wrapper = new QandAModelWrapper()
+                {
                     useRSC = usingRSC,
                     showLogin = false,
                     model = model
                 };
 
-                if (skipRefresh != true)
-                {
-                    await RefreshQandA(model, graph);
-                    GraphServiceClient graphForWebhooks = await Authorization.GetGraphClientForCreatingWebhooks(teamId, Request.Cookies, Response.Cookies, usingRSC);
-                    await CreateSubscription(channelId, model, graphForWebhooks);
-                }
+                //if (skipRefresh != true)
+                //{
+                //    await RefreshQandA(model, graph);
+                //    GraphServiceClient graphForWebhooks = await Authorization.GetGraphClientForCreatingWebhooks(teamId, Request.Cookies, Response.Cookies, usingRSC);
+                //    await CreateSubscription(channelId, model, graphForWebhooks);
+                //}
                 ViewBag.MyModel = model;
                 return View("First", wrapper);
             }
@@ -414,6 +448,28 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             return Redirect(url);
         }
 
+        // Token-based login
+        [Route("tokenLogin")]
+        [HttpPost]
+        public async Task<ActionResult> TokenLogin([FromUri] bool? useRSC)
+        {
+            try
+            {
+                await Authorization.TokenLoginAsync(useRSC ?? false, Request.Form["token"], Response.Cookies);
+                return new HttpStatusCodeResult(HttpStatusCode.OK);
+            }
+            catch (Exception ex)
+            {
+                Authorization.Logout(Response.Cookies);
+                Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                return new ContentResult
+                {
+                    ContentType = "application/json",
+                    Content = ex.Message
+                };
+            }
+        }
+
         [Route("")]
         public ActionResult Index()
         {
@@ -474,52 +530,52 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
         private static async Task CreateSubscription(string channelId, QandAModel model, GraphServiceClient graph)
         {
-            var subscription = new Subscription
-            {
-                Resource = $"teams/{model.teamId}/channels/{model.channelId}/messages",
-                ChangeType = "created,updated,deleted",
-                NotificationUrl = ConfigurationManager.AppSettings["NotificationUrl"],
-                ClientState = Guid.NewGuid().ToString(),
-                //ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 10, seconds: 0),
-                ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 1, seconds: 0),
-                IncludeProperties = false,
-                LifecycleNotificationUrl = "https://qna.ngrok.io/webhookLifecyle",
-                AdditionalData = new Dictionary<string, object>() {
-                    ["includeResourceData"] = false,
-                    ["encryptionCertificate"] = SelfSignedCert,
-                    ["encryptionCertificateId"] = "testcert",
-                }
-            };
+            //var subscription = new Subscription
+            //{
+            //    Resource = $"teams/{model.teamId}/channels/{model.channelId}/messages",
+            //    ChangeType = "created,updated,deleted",
+            //    NotificationUrl = ConfigurationManager.AppSettings["NotificationUrl"],
+            //    ClientState = Guid.NewGuid().ToString(),
+            //    //ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 10, seconds: 0),
+            //    ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 1, seconds: 0),
+            //    IncludeProperties = false,
+            //    LifecycleNotificationUrl = "https://qna.ngrok.io/webhookLifecyle",
+            //    AdditionalData = new Dictionary<string, object>() {
+            //        ["includeResourceData"] = false,
+            //        ["encryptionCertificate"] = SelfSignedCert,
+            //        ["encryptionCertificateId"] = "testcert",
+            //    }
+            //};
 
-            try
-            {
-                if (channelToSubscription.ContainsKey(channelId))
-                {
-                    // refresh subscription
-                    var subId = channelToSubscription[channelId];
+            //try
+            //{
+            //    if (channelToSubscription.ContainsKey(channelId))
+            //    {
+            //        // refresh subscription
+            //        var subId = channelToSubscription[channelId];
 
-                    // Since this is a fake encryption subscription, we can't update the encryption properties
-                    subscription.AdditionalData = null;
+            //        // Since this is a fake encryption subscription, we can't update the encryption properties
+            //        subscription.AdditionalData = null;
 
-                    var newSubscription = await graph.Subscriptions[subId].Request().UpdateAsync(subscription);
-                }
-                else
-                {
-                    try
-                    {
-                        var newSubscription = await graph.Subscriptions.Request().AddAsync(subscription);
-                        channelToSubscription[channelId] = newSubscription.Id;
-                    }
-                    catch (Exception e) when (e.Message.Contains("has reached its limit of 1 TEAMS"))
-                    {
-                        // ignore, we're still being notified
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Bail on subscriptions without killing the whole demo
-            }
+            //        var newSubscription = await graph.Subscriptions[subId].Request().UpdateAsync(subscription);
+            //    }
+            //    else
+            //    {
+            //        try
+            //        {
+            //            var newSubscription = await graph.Subscriptions.Request().AddAsync(subscription);
+            //            channelToSubscription[channelId] = newSubscription.Id;
+            //        }
+            //        catch (Exception e) when (e.Message.Contains("has reached its limit of 1 TEAMS"))
+            //        {
+            //            // ignore, we're still being notified
+            //        }
+            //    }
+            //}
+            //catch (Exception)
+            //{
+            //    // Bail on subscriptions without killing the whole demo
+            //}
         }
 
         // Callback

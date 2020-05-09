@@ -89,3 +89,33 @@ function showLogin(useRSC) {
         }
     });
 }
+
+function loginUsingTabSSO(useRSC) {
+    var authTokenRequest = {
+        successCallback: function (tabSsoToken) {
+            console.log("Tab SSO succeeded: " + tabSsoToken);
+            $.ajax({
+                url: window.location.origin + "/tokenLogin?useRSC=" + (useRSC ? "true" : "false"),
+                method: "POST",
+                data: {
+                    token: tabSsoToken
+                },
+                success: function () {
+                    console.log("Successfully logged in using SSO token");
+                    window.location.reload(true);
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    let aadError = JSON.parse(xhr.responseText);
+                    console.log(aadError);
+                    $("#loginButton").text("Authorize access to Microsoft Graph");
+                    $("#loginButton").show();
+                },
+            });
+        },
+        failureCallback: function (error) {
+            console.log("Tab SSO failed: " + error);
+            $("#loginButton").show();
+        },
+    };
+    microsoftTeams.authentication.getAuthToken(authTokenRequest);
+} 
