@@ -3,8 +3,12 @@
   "manifestVersion": "devPreview",
 
   "webApplicationInfo": {
-    "id": "cb38cf54-ac89-4a7a-9ea3-095d3d080037",
-    "resource": "api://qna.ngrok.io/a67b96c2-4d02-4503-97e5-564838d3a650"
+    "id": "a67b96c2-4d02-4503-97e5-564838d3a650",
+    "resource": "api://qna.ngrok.io/a67b96c2-4d02-4503-97e5-564838d3a650",
+    "applicationPermissions": [
+      "ChannelMessage.Read.Group",
+      "Member.Read.Group"
+    ]
   },
 
   "version": "1.0.11",

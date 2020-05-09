@@ -103,16 +103,18 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             // Figure out the user and tenant from the userToken. The information is all in the token, 
             // but the easiest way to verify the token is properly signed is to use it to make a Graph call.
             GraphServiceClient userGraph = GetGraphClientUnsafe(userToken);
-            User me = null;
-            try
-            {
-                me = await userGraph.Me.Request().GetAsync();
-            }
-            catch
-            {
-                // eg InvalidAuthenticationToken
-                FailAuth(requestCookies, responseCookies);
-            }
+            //User me = null;
+            //try
+            //{
+            //    me = await userGraph.Me.Request().GetAsync();
+            //}
+            //catch
+            //{
+            //    // eg InvalidAuthenticationToken
+            //    FailAuth(requestCookies, responseCookies);
+            //}
+            // TODO -- verify the token
+            string userId = GetTokenClaim(userToken, "oid"); 
             string tenantId = GetTenant(userToken);
 
             string messagingToken =
@@ -120,12 +122,13 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 ? await GetAppPermissionToken(tenantId, useRSC)
                 : userToken;
 
-            //GraphServiceClient messagingGraph = GetGraphClientUnsafe(messagingToken);
+            GraphServiceClient messagingGraph = GetGraphClientUnsafe(messagingToken);
 
+            // TODO -- Reenable the membership check
             //var members = await messagingGraph.Groups[teamId].Members.Request().GetAsync();
-            //if (!members.Any(member => member.Id == me.Id))
+            //if (!members.Any(member => member.Id == userId))
             //    FailAuth(requestCookies, responseCookies);
-            //// to do - figure out if this handles paging, for the case where there's more than 500 users in a team
+            // to do - figure out if this handles paging, for the case where there's more than 500 users in a team
 
             //// Alternate approach:
             ////bool userIsMember = false;
@@ -136,10 +139,10 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             ////        userIsMember = true;
             ////}
 
-            //string webhookToken =
-            //    useRSC
-            //    ? messagingToken // Same code as the next line, except in the RSC case we've already called GetAppPermissionToken()
-            //    : await GetAppPermissionToken(tenantId, useRSC);
+            string webhookToken =
+                useRSC
+                ? messagingToken // Same code as the next line, except in the RSC case we've already called GetAppPermissionToken()
+                : await GetAppPermissionToken(tenantId, useRSC);
 
             return new Tokens() { userToken = userToken, messagingToken = messagingToken, };//webhookToken = webhookToken };
         }
@@ -173,16 +176,17 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         /// <returns>Tracking task</returns>
         public static async Task TokenLoginAsync(bool useRSC, string tabSsoToken, HttpCookieCollection responseCookies)
         {
+            useRSC = true;
             string appId = GetGraphAppId(useRSC);
             string appSecret = Uri.EscapeDataString(GetGraphAppPassword(useRSC));
             string tenant = GetTenant(tabSsoToken);
 
             // See https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-on-behalf-of-flow
             string response = await HttpHelpers.POST($"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
-                $"&client_id=a67b96c2-4d02-4503-97e5-564838d3a650" +
-                    //$"&client_id={appId}" +
-                    "&client_secret=" + Uri.EscapeDataString("kd6mVe7Wk]Hs7RIi4?-tkItDeCUdW[]=") +
-                    //"&client_secret={appSecret}" +
+                //$"&client_id=a67b96c2-4d02-4503-97e5-564838d3a650" +
+                    $"&client_id={appId}" +
+                    //"&client_secret=" + Uri.EscapeDataString("kd6mVe7Wk]Hs7RIi4?-tkItDeCUdW[]=") +
+                    $"&client_secret={appSecret}" +
                     "&grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" +
                     $"&assertion={tabSsoToken}" +
                     "&requested_token_use=on_behalf_of" +
@@ -368,12 +372,12 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                     model = model
                 };
 
-                //if (skipRefresh != true)
-                //{
-                //    await RefreshQandA(model, graph);
-                //    GraphServiceClient graphForWebhooks = await Authorization.GetGraphClientForCreatingWebhooks(teamId, Request.Cookies, Response.Cookies, usingRSC);
-                //    await CreateSubscription(channelId, model, graphForWebhooks);
-                //}
+                if (skipRefresh != true)
+                {
+                    await RefreshQandA(model, graph);
+                    GraphServiceClient graphForWebhooks = await Authorization.GetGraphClientForCreatingWebhooks(teamId, Request.Cookies, Response.Cookies, usingRSC);
+                    await CreateSubscription(channelId, model, graphForWebhooks);
+                }
                 ViewBag.MyModel = model;
                 return View("First", wrapper);
             }
