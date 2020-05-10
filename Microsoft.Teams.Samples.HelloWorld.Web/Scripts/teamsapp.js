@@ -107,7 +107,7 @@ function loginUsingTabSSO(useRSC) {
                 error: function (xhr, textStatus, errorThrown) {
                     let aadError = JSON.parse(xhr.responseText);
                     console.log(aadError);
-                    $("#loginButton").text("Authorize access to Microsoft Graph");
+                    $("#loginButton").text("Grant consent");
                     $("#loginButton").show();
                 },
             });

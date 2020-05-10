@@ -95,16 +95,16 @@
             client_id: "@Model.GraphAppId",
             response_type: "id_token token",
             response_mode: "form_post",
-            //response_type: "code",
-            //response_mode: "query",
             resource: "https://graph.microsoft.com",
             redirect_uri: window.location.origin + "/authdone",
             nonce: "23",
             state: state,
-            scope: "@Model.Scopes", // because .default doesn't always pop a consent prompt when it should
+            scope: "@Model.Scopes" // because .default doesn't always pop a consent prompt when it should
+
+            // Leave out login -- it brings up a password prompt
             // The context object is populated by Teams; the loginHint attribute
             // is used as hinting information
-            login_hint: context.loginHint,
+            //login_hint: context.loginHint,
         };
         if (@Model.useRSC) {
             queryParams.prompt = "consent";

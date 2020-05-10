@@ -118,5 +118,5 @@ Good demo questions:
 - Are we open for the holidays?
 - Is the business growing?
 - How do we beat the competition?
-- Are we moving offices?
+- When can we go back to the office?
 - Are we done yet?

@@ -701,6 +701,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
         public static string StripHTML(string input)
         {
+            input = input.Replace("&nbsp;", " ");
             return Regex.Replace(input, "<.*?>", String.Empty);
         }
 
