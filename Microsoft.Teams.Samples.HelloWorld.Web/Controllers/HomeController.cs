@@ -144,7 +144,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
                 ? messagingToken // Same code as the next line, except in the RSC case we've already called GetAppPermissionToken()
                 : await GetAppPermissionToken(tenantId, useRSC);
 
-            return new Tokens() { userToken = userToken, messagingToken = messagingToken, };//webhookToken = webhookToken };
+            return new Tokens() { userToken = userToken, messagingToken = messagingToken, webhookToken = webhookToken };
         }
 
         private static string GetTokenFromCookie(HttpCookieCollection cookies)
@@ -183,9 +183,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
             // See https://docs.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-on-behalf-of-flow
             string response = await HttpHelpers.POST($"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
-                //$"&client_id=a67b96c2-4d02-4503-97e5-564838d3a650" +
                     $"&client_id={appId}" +
-                    //"&client_secret=" + Uri.EscapeDataString("kd6mVe7Wk]Hs7RIi4?-tkItDeCUdW[]=") +
                     $"&client_secret={appSecret}" +
                     "&grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" +
                     $"&assertion={tabSsoToken}" +
@@ -533,52 +531,53 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
         private static async Task CreateSubscription(string channelId, QandAModel model, GraphServiceClient graph)
         {
-            //var subscription = new Subscription
-            //{
-            //    Resource = $"teams/{model.teamId}/channels/{model.channelId}/messages",
-            //    ChangeType = "created,updated,deleted",
-            //    NotificationUrl = ConfigurationManager.AppSettings["NotificationUrl"],
-            //    ClientState = Guid.NewGuid().ToString(),
-            //    //ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 10, seconds: 0),
-            //    ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 1, seconds: 0),
-            //    IncludeProperties = false,
-            //    LifecycleNotificationUrl = "https://qna.ngrok.io/webhookLifecyle",
-            //    AdditionalData = new Dictionary<string, object>() {
-            //        ["includeResourceData"] = false,
-            //        ["encryptionCertificate"] = SelfSignedCert,
-            //        ["encryptionCertificateId"] = "testcert",
-            //    }
-            //};
+            var subscription = new Subscription
+            {
+                Resource = $"teams/{model.teamId}/channels/{model.channelId}/messages",
+                ChangeType = "created,updated,deleted",
+                NotificationUrl = ConfigurationManager.AppSettings["NotificationUrl"],
+                ClientState = Guid.NewGuid().ToString(),
+                //ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 10, seconds: 0),
+                ExpirationDateTime = DateTime.UtcNow + new TimeSpan(days: 0, hours: 0, minutes: 2, seconds: 0),
+                IncludeProperties = false,
+                LifecycleNotificationUrl = "https://qna.ngrok.io/webhookLifecyle",
+                AdditionalData = new Dictionary<string, object>()
+                {
+                    ["includeResourceData"] = false,
+                    ["encryptionCertificate"] = SelfSignedCert,
+                    ["encryptionCertificateId"] = "testcert",
+                }
+            };
 
-            //try
-            //{
-            //    if (channelToSubscription.ContainsKey(channelId))
-            //    {
-            //        // refresh subscription
-            //        var subId = channelToSubscription[channelId];
+            try
+            {
+                if (channelToSubscription.ContainsKey(channelId))
+                {
+                    // refresh subscription
+                    var subId = channelToSubscription[channelId];
 
-            //        // Since this is a fake encryption subscription, we can't update the encryption properties
-            //        subscription.AdditionalData = null;
+                    // Since this is a fake encryption subscription, we can't update the encryption properties
+                    subscription.AdditionalData = null;
 
-            //        var newSubscription = await graph.Subscriptions[subId].Request().UpdateAsync(subscription);
-            //    }
-            //    else
-            //    {
-            //        try
-            //        {
-            //            var newSubscription = await graph.Subscriptions.Request().AddAsync(subscription);
-            //            channelToSubscription[channelId] = newSubscription.Id;
-            //        }
-            //        catch (Exception e) when (e.Message.Contains("has reached its limit of 1 TEAMS"))
-            //        {
-            //            // ignore, we're still being notified
-            //        }
-            //    }
-            //}
-            //catch (Exception)
-            //{
-            //    // Bail on subscriptions without killing the whole demo
-            //}
+                    var newSubscription = await graph.Subscriptions[subId].Request().UpdateAsync(subscription);
+                }
+                else
+                {
+                    try
+                    {
+                        var newSubscription = await graph.Subscriptions.Request().AddAsync(subscription);
+                        channelToSubscription[channelId] = newSubscription.Id;
+                    }
+                    catch (Exception e) when (e.Message.Contains("has reached its limit of 1 TEAMS"))
+                    {
+                        // ignore, we're still being notified
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Bail on subscriptions without killing the whole demo
+            }
         }
 
         // Callback

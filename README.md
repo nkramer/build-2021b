@@ -120,3 +120,5 @@ Good demo questions:
 - How do we beat the competition?
 - When can we go back to the office?
 - Are we done yet?
+- How can we scale our business?
+- What's our focus for Q2?
