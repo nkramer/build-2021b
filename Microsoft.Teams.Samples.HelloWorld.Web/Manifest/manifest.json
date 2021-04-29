@@ -2,17 +2,8 @@
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.5/MicrosoftTeams.schema.json",
   "manifestVersion": "devPreview",
 
-  "webApplicationInfo": {
-    "id": "cb38cf54-ac89-4a7a-9ea3-095d3d080037",
-    "resource": "https://AkjRscBasedStoreApp",
-    "applicationPermissions": [
-      "ChannelMessage.Read.Group",
-      "Member.Read.Group"
-    ]
-  },
-
-  "version": "1.0.11",
-  "id": "55cbeb0e-e7be-4ab3-b9bf-ef919406a846",
+  "version": "1.0.12",
+  "id": "55cbeb0e-e7be-4ab3-b9bf-ef919406a84a",
   "packageName": "com.contoso.helloworldngrok",
   "developer": {
     "name": "Contoso",
@@ -25,12 +16,12 @@
     "color": "contoso96x96.png"
   },
   "name": {
-    "short": "Q&A Tracker (ngrok)",
-    "full": "Q&A Tracker (ngrok)"
+    "short": "cTrade",
+    "full": "Contoso Trade"
   },
   "description": {
-    "short": "Track questions and answers",
-    "full": "This app lets you see the questions that have been asked in a channel, and track which ones have been answered."
+    "short": "Trade stocks and bonds",
+    "full": "Trade stocks and bonds, with no limit on volume."
   },
   "accentColor": "#60A18E",
   "configurableTabs": [
@@ -46,7 +37,7 @@
     {
       "entityId": "com.contoso.helloworld.hellotab",
       "name": "Hello Tab",
-      "contentUrl": "https://qna.ngrok.io/hello",
+      "contentUrl": "https://qna.ngrok.io/",
       "scopes": [
         "personal"
       ]
