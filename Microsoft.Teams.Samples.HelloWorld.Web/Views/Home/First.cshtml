@@ -1,237 +1,508 @@
 ﻿@model Microsoft.Teams.Samples.HelloWorld.Web.Controllers.QandAModelWrapper
 
-<style>
-    .header {
-        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-        line-height: 1.42857143;
-        color: #333;
-        font-size: 27px;
-        margin: 20px;
-        margin-top: 40px
-    }
+<body style="background-color:red;">
 
-    .outer {
-        border-radius: 4px;
-        border-style: solid;
-        border-color: #ddd;
-        border-width: 1px;
-        margin: 8px;
-        box-shadow: 0 1px 1px rgba(0,0,0,.05);
-        max-width: 700px;
-        /*border-top: 1px;*/
-        margin-left: 50px;
-    }
-
-    .logoutDiv {
-        margin: 8px;
-        max-width: 700px;
-        /*border-top: 1px;*/
-        margin-left: 50px;
-    }
-
-    .logout {
-        align-self: flex-end;
-    }
-
-    .inner {
-        display: flex;
-        align-items: center;
-        color: #333;
-        background-color: #f5f5f5;
-        border-color: #ddd;
-        /* border-bottom: 0; */
-        padding: 10px 15px;
-        /* border-top-left-radius: 3px; */
-        /* border-top-right-radius: 3px; */
-        /* box-sizing: border-box; */
-        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-        font-size: 14px;
-        line-height: 1.42857143;
-        color: #333;
-    }
-
-    .votes {
-        font-size: 11px;
-        color: #7a7a7a;
-        float: left;
-        display: block;
-        width: 75px;
-        align-items: center;
-        flex-grow: 0;
-    }
-
-    .question {
-        width: 100%;
-        flex-grow: 200;
-    }
-
-    .mark {
-        font-size: 11px;
-        width: 100px;
-    }
-
-        .mark a {
-            color: #7a7a7a;
+    <style>
+        .header {
+            font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+            line-height: 1.42857143;
+            color: #333;
+            font-size: 27px;
+            margin: 20px;
+            margin-top: 40px
         }
 
-            .mark a:hover {
-                color: blue;
+        .outer {
+            border-radius: 4px;
+            border-style: solid;
+            border-color: #ddd;
+            border-width: 1px;
+            margin: 8px;
+            box-shadow: 0 1px 1px rgba(0,0,0,.05);
+            max-width: 700px;
+            /*border-top: 1px;*/
+            margin-left: 50px;
+        }
+
+        .logoutDiv {
+            margin: 8px;
+            max-width: 700px;
+            /*border-top: 1px;*/
+            margin-left: 50px;
+        }
+
+        .logout {
+            align-self: flex-end;
+        }
+
+        .inner {
+            display: flex;
+            align-items: center;
+            color: #333;
+            background-color: #f5f5f5;
+            border-color: #ddd;
+            /* border-bottom: 0; */
+            padding: 10px 15px;
+            /* border-top-left-radius: 3px; */
+            /* border-top-right-radius: 3px; */
+            /* box-sizing: border-box; */
+            font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+            font-size: 14px;
+            line-height: 1.42857143;
+            color: #333;
+        }
+
+        .votes {
+            font-size: 11px;
+            color: #7a7a7a;
+            float: left;
+            display: block;
+            width: 75px;
+            align-items: center;
+            flex-grow: 0;
+        }
+
+        .question {
+            width: 100%;
+            flex-grow: 200;
+        }
+
+        .mark {
+            font-size: 11px;
+            width: 100px;
+        }
+
+            .mark a {
+                color: #7a7a7a;
             }
 
-    .banner {
-        display: flex;
-        align-items: baseline;
-        border-style: solid;
-        border-width: 0px;
-        border-bottom-width: 5px;
-        border-color: rgb(242, 139, 58);
-        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-        max-width: 775px;
-    }
+                .mark a:hover {
+                    color: blue;
+                }
 
-    .reset {
-        max-width: 700px;
-        align-self: flex-end;
-        position: fixed;
-        bottom: 20px;
-    }
-
-    .motto {
-        font-size: 12pt;
-        color: #888888;
-    }
-
-    .brand {
-        font-size: 25px;
-    }
-
-    .brand2 {
-        color: #c47200;
-    }
-
-    .spacer {
-        flex-grow: 200;
-    }
-</style>
-
-<div class="banner">
-    <div class="brand"><span class="brand1">Q&amp;A</span> <span class="brand2">Tracker</span></div>
-    <div class="spacer"></div>
-    <div class="motto">You have questions? We have answers!</div>
-</div>
-
-@{
-    // HACK: Should just be Model, but even accessing that property throws an exception
-    var model = Model.model; //(BotAuthenticationMSGraph.QandAModel)ViewBag.MyModel;
-    if (Model.showLogin)
-    {
-        <button onclick='@("showLogin("+ Json.Encode(Model.useRSC) + ")")'>Authenticate me</button>
-    }
-    else if (model != null)
-    {
-        <h2 class="header">Open questions</h2>
-        foreach (var q in model.Questions.Where(q => !model.IsQuestionAnswered[q.MessageId]))
-        {
-            <div class="outer">
-                <div class="inner">
-                    <div class="votes">@q.Votes likes</div>
-                    <div class="question">@q.Text</div>
-                    <div class="mark">
-                        @Html.ActionLink(
-                            linkText: "Mark as answered",
-                            actionName: "MarkAsAnswered",
-                            controllerName: "Home",
-                            routeValues: new
-                            {
-                                model.tenantId,
-                                model.teamId,
-                                model.channelId,
-                                messageId = q.MessageId
-        }, //model.messageId, replyId = q.MessageId },
-                            htmlAttributes: null)
-                    </div>
-                </div>
-            </div>
+        .banner {
+            display: flex;
+            align-items: baseline;
+            border-style: solid;
+            border-width: 0px;
+            border-bottom-width: 5px;
+            border-color: rgb(242, 139, 58);
+            font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+            max-width: 775px;
         }
 
-        <h2 class="header">Answered questions</h2>
-        foreach (var q in model.Questions.Where(q => model.IsQuestionAnswered[q.MessageId]))
-        {
-            <div class="outer">
-                <div class="inner">
-                    <div class="votes">@q.Votes likes</div>
-                    <div class="question">@q.Text</div>
-                    <div class="mark">
-                        @Html.ActionLink(
-                            linkText: "Re-open",
-                            actionName: "MarkAsUnanswered",
-                            controllerName: "Home",
-                            routeValues: new
-                            {
-                                model.tenantId,
-                                model.teamId,
-                                model.channelId,
-                                messageId = q.MessageId
-                            }, //model.messageId, replyId = q.MessageId },
-                            htmlAttributes: null)
-                    </div>
-                </div>
-            </div>
+        .reset {
+            max-width: 700px;
+            align-self: flex-end;
+            position: fixed;
+            bottom: 20px;
         }
 
-        <div class="logoutDiv" align="right">
-            @*@Html.ActionLink(linkText: "Log out",
-                                    actionName: "Logout",
-                                    controllerName: "Home",
-                                    routeValues: new
-                                    {
-                                        model.tenantId,
-                                        model.teamId,
-                                        model.channelId,
-                                        useRSC= Model.useRSC
-                                    }, //model.messageId, replyId = q.MessageId },
-                                    htmlAttributes: new { @class = "logout" })*@
+        .motto {
+            font-size: 12pt;
+            color: #888888;
+        }
+
+        .brand {
+            font-size: 25px;
+        }
+
+        .brand2 {
+            color: #c47200;
+        }
+
+        .spacer {
+            flex-grow: 200;
+        }
+
+
+        element.style {
+        }
+
+
+        .fl {
+            box-shadow: rgb(0 0 0 / 25%) 0px 0.2rem 0.4rem -0.075rem;
+        }
+
+
+        .fk {
+            border-left-width: 1px;
+        }
+
+
+        .fj {
+            border-bottom-width: 1px;
+        }
+
+
+        .fi {
+            border-right-width: 1px;
+        }
+
+
+        .fh {
+            border-top-width: 1px;
+        }
+
+
+        .fg {
+            transition: all 100ms ease 0s;
+        }
+
+
+        .ff {
+            padding-left: 1.25rem;
+        }
+
+
+        .fe {
+            padding-right: 1.25rem;
+        }
+
+
+        .fd {
+            border-radius: 2px;
+        }
+
+
+        .fc {
+            background-color: rgb(98, 100, 167);
+        }
+
+
+        .fb {
+            color: rgb(255, 255, 255);
+        }
+
+
+        .ez {
+            max-width: 17.5rem;
+        }
+
+
+        .ey {
+            min-width: 6rem;
+        }
+
+
+        .ex {
+            height: 2rem;
+        }
+
+
+        .eb {
+            vertical-align: middle;
+        }
+
+
+        .dv {
+            -webkit-box-pack: center;
+            justify-content: center;
+        }
+
+
+        .du {
+            outline-width: 0px;
+        }
+
+
+        .bn {
+            padding-bottom: 0px;
+        }
+
+
+        .bl {
+            padding-top: 0px;
+        }
+
+
+        .bj {
+            display: inline-flex;
+        }
+
+
+        .bi {
+            cursor: pointer;
+        }
+
+
+        .bg {
+            border-left-color: transparent;
+        }
+
+
+        .bf {
+            border-bottom-color: transparent;
+        }
+
+
+        .be {
+            border-right-color: transparent;
+        }
+
+
+        .bd {
+            border-top-color: transparent;
+        }
+
+
+        .ay {
+            border-left-style: solid;
+        }
+
+
+        .ax {
+            border-bottom-style: solid;
+        }
+
+
+        .aw {
+            border-right-style: solid;
+        }
+
+
+        .av {
+            border-top-style: solid;
+        }
+
+
+        .au {
+            -webkit-box-align: center;
+            align-items: center;
+        }
+
+
+        .at {
+            position: relative;
+        }
+
+
+        [type=button], [type=reset], [type=submit], button {
+            -webkit-appearance: button;
+        }
+
+
+        button, select {
+            text-transform: none;
+        }
+
+
+        button, input {
+            overflow: visible;
+        }
+
+
+        button, input, optgroup, select, textarea {
+            font-family: inherit;
+            font-size: 100%;
+            line-height: 1.15;
+            margin: 0;
+        }
+
+
+        * {
+            box-sizing: border-box;
+        }
+
+        user agent stylesheet
+        button {
+            appearance: auto;
+            -webkit-writing-mode: horizontal-tb !important;
+            text-rendering: auto;
+            color: -internal-light-dark(black, white);
+            letter-spacing: normal;
+            word-spacing: normal;
+            text-transform: none;
+            text-indent: 0px;
+            text-shadow: none;
+            display: inline-block;
+            text-align: center;
+            align-items: flex-start;
+            cursor: default;
+            background-color: -internal-light-dark(rgb(239, 239, 239), rgb(59, 59, 59));
+            box-sizing: border-box;
+            margin: 0em;
+            font: 400 13.3333px Arial;
+            padding: 1px 6px;
+            border-width: 2px;
+            border-style: outset;
+            border-color: -internal-light-dark(rgb(118, 118, 118), rgb(133, 133, 133));
+            border-image: initial;
+        }
+
+
+        .c {
+            text-align: left;
+        }
+
+
+        .b {
+            color: rgb(37, 36, 35);
+        }
+
+
+        body {
+            padding-top: 0;
+            padding-left: 0;
+            padding-bottom: 0;
+            padding-right: 0;
+            margin-top: 0;
+            margin-left: 0;
+            margin-bottom: 0;
+            margin-right: 0;
+            font-family: "Segoe UI", system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+            font-size: 0.875rem;
+            line-height: 1.4286;
+        }
+
+
+        html {
+            line-height: 1.15;
+            -webkit-text-size-adjust: 100%;
+        }
+
+
+        *:before {
+            box-sizing: border-box;
+        }
+
+
+        *:after {
+            box-sizing: border-box;
+        }
+
+
+        .e ::-webkit-scrollbar {
+            width: 1rem;
+        }
+
+
+        .d ::-webkit-scrollbar {
+            height: 1rem;
+        }
+
+
+        .u ::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+
+        .t ::-webkit-scrollbar-thumb {
+            background-clip: content-box;
+        }
+
+
+        .s ::-webkit-scrollbar-thumb {
+            border-left-color: transparent;
+        }
+
+
+        .r ::-webkit-scrollbar-thumb {
+            border-bottom-color: transparent;
+        }
+
+
+        .q ::-webkit-scrollbar-thumb {
+            border-right-color: transparent;
+        }
+
+
+        .p ::-webkit-scrollbar-thumb {
+            border-top-color: transparent;
+        }
+
+
+        .o ::-webkit-scrollbar-thumb {
+            border-left-width: 0.25rem;
+        }
+
+
+        .n ::-webkit-scrollbar-thumb {
+            border-bottom-width: 0.25rem;
+        }
+
+
+        .m ::-webkit-scrollbar-thumb {
+            border-right-width: 0.25rem;
+        }
+
+
+        .l ::-webkit-scrollbar-thumb {
+            border-top-width: 0.25rem;
+        }
+
+
+        .k ::-webkit-scrollbar-thumb {
+            border-left-style: solid;
+        }
+
+
+        .j ::-webkit-scrollbar-thumb {
+            border-bottom-style: solid;
+        }
+
+
+        .i ::-webkit-scrollbar-thumb {
+            border-right-style: solid;
+        }
+
+
+        .h ::-webkit-scrollbar-thumb {
+            border-top-style: solid;
+        }
+
+
+        .g ::-webkit-scrollbar-thumb {
+            border-radius: 0.5625rem;
+        }
+
+
+        .ak ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+    </style>
+
+    <div class="flex-container" style="  display: flex;">
+        <img src="content/mockup.png" height="600" width="600" />
+        <div data-builder-id="builder-root" style="margin-left:30px">
+            <button data-aa-class="Button" class="ui-button ex ey ez fb fc fd bj dv au at bl fe bn ff eb bi fg du fh fi fj fk av aw ax ay bd be bf bg fl fm fn fo fp fq bu bv bw bx by bz ca cb cc cd ce cf cg ch ci cj cl cm cn co cp cq fr fs ft fu cv cw cx cy cz da db dc dd de df dg dh di dj dk dl fv fw fx fy" data-builder-id="r1s94p84f5r"><span dir="auto" class="ui-button__content ga gb gc bk gd ge">Buy</span></button><p></p><div role="button" tabindex="0" data-aa-class="Button" class="ui-button ex ey ez b gf fd bj dv au at bl fe bn ff eb bi fg du fh fi fj fk av aw ax ay gg gh gi gj gk bt gl gm gn go gp fo gq gr gs gt gu gv fq bu bz ca cb cc cd ce cf cg ch ci cj cl cm cn co cp cq fr fs ft fu cv cw cx cy cz da db dc dd de df dg dh di dj dk dl fv fw fx fy gw gx gy gz ha hb hc hd" data-builder-id="3v5hbau1gf8"><span dir="auto" class="ui-button__content ga gb gc bk gd ge">Get Help</span></div>
         </div>
-    }
-    else
-    {
-        @Html.ActionLink("Click here to sign in", "SignIn", "Account", new { area = "" }, new { @class = "btn btn-primary btn-large" })
-    }
-}
+    </div>
 
+    <script>
+        var x = setInterval(function () {
+            //                                                window.location.reload(true);
+        }, 10 * 1000); // 10s
+    </script>
 
-<script>
-                                            var x = setInterval(function() {
-//                                                window.location.reload(true);
-                                            }, 10 * 1000); // 10s
-</script>
+    @*<!--Script references. -->
+        <!--Reference the jQuery library. -->
+        <script src="Scripts/jquery-1.10.2.min.js"></script>
+        <!--Reference the SignalR library. -->
+        <script src="Scripts/jquery.signalR-2.1.2.min.js"></script>
+        <!--Reference the autogenerated SignalR hub script. -->
+        <script src="signalr/hubs"></script>
+        <!--Add script to update the page and send messages.-->
+        <script type="text/javascript">
+            $(function () {
+                // Declare a proxy to reference the hub.
+                var chat = $.connection.chatHub;
+                // Create a function that the hub can call to broadcast messages.
+                chat.client.broadcastMessage = function (name, message) {
+                    window.location.reload(true);
+                };
+                chat.client.update = function () {
+                    window.location.reload(true);
+                };
 
-<!--Script references. -->
-<!--Reference the jQuery library. -->
-<script src="Scripts/jquery-1.10.2.min.js"></script>
-<!--Reference the SignalR library. -->
-<script src="Scripts/jquery.signalR-2.1.2.min.js"></script>
-<!--Reference the autogenerated SignalR hub script. -->
-<script src="signalr/hubs"></script>
-<!--Add script to update the page and send messages.-->
-<script type="text/javascript">
-    $(function () {
-        // Declare a proxy to reference the hub.
-        var chat = $.connection.chatHub;
-        // Create a function that the hub can call to broadcast messages.
-        chat.client.broadcastMessage = function (name, message) {
-            window.location.reload(true);
-        };
-        chat.client.update = function () {
-            window.location.reload(true);
-        };
-
-        // Start the connection.
-        $.connection.hub.start().done(function () {
-            $('#sendmessage').click(function () {
-                // Call the Send method on the hub.
-                chat.server.send("", "");
+                // Start the connection.
+                $.connection.hub.start().done(function () {
+                    $('#sendmessage').click(function () {
+                        // Call the Send method on the hub.
+                        chat.server.send("", "");
+                    });
+                });
             });
-        });
-    });
-</script>
+        </script>*@
+
+</body>

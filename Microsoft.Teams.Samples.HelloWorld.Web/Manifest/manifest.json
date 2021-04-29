@@ -2,7 +2,7 @@
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.5/MicrosoftTeams.schema.json",
   "manifestVersion": "devPreview",
 
-  "version": "1.0.12",
+  "version": "1.0.15",
   "id": "55cbeb0e-e7be-4ab3-b9bf-ef919406a84a",
   "packageName": "com.contoso.helloworldngrok",
   "developer": {
@@ -36,8 +36,8 @@
   "staticTabs": [
     {
       "entityId": "com.contoso.helloworld.hellotab",
-      "name": "Hello Tab",
-      "contentUrl": "https://qna.ngrok.io/",
+      "name": "FBKM",
+      "contentUrl": "https://qna.ngrok.io/first",
       "scopes": [
         "personal"
       ]
