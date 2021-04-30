@@ -312,6 +312,12 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
     public class HomeController : Controller
     {
+        [Route("help")]
+        public async Task<ActionResult> Help()
+        {
+                return View("First");
+        }
+
         [Route("first")]
         public async Task<ActionResult> First(
             [FromUri(Name = "tenantId")] string tenantId,

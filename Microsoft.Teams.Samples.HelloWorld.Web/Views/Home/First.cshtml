@@ -462,10 +462,46 @@
         }
     </style>
 
+    <style>
+        .dot {
+            margin-left: 12px;
+            height: 12px;
+            width: 12px;
+            background-color: #bbb;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .red {
+            background-color: #C12D4D;
+        }
+
+        .yellow {
+            background-color: #FAD022;
+        }
+
+        .green {
+            background-color: #94C455;
+        }
+
+        .category {
+            font-size: 20px;
+            color: #16233A;
+            margin-bottom: 8px;
+            margin-top: 16px;
+        }
+
+        .person {
+            margin-left: 12px;
+            color: #16233A;
+            font-size: 14px;
+        }
+    </style>
+
     <div class="flex-container" style="  display: flex;">
         <img src="content/mockup.png" height="600" width="600" />
         <div data-builder-id="builder-root" style="margin-left:30px">
-            <button data-aa-class="Button" class="ui-button ex ey ez fb fc fd bj dv au at bl fe bn ff eb bi fg du fh fi fj fk av aw ax ay bd be bf bg fl fm fn fo fp fq bu bv bw bx by bz ca cb cc cd ce cf cg ch ci cj cl cm cn co cp cq fr fs ft fu cv cw cx cy cz da db dc dd de df dg dh di dj dk dl fv fw fx fy" data-builder-id="r1s94p84f5r"> 
+            <button data-aa-class="Button" class="ui-button ex ey ez fb fc fd bj dv au at bl fe bn ff eb bi fg du fh fi fj fk av aw ax ay bd be bf bg fl fm fn fo fp fq bu bv bw bx by bz ca cb cc cd ce cf cg ch ci cj cl cm cn co cp cq fr fs ft fu cv cw cx cy cz da db dc dd de df dg dh di dj dk dl fv fw fx fy" data-builder-id="r1s94p84f5r">
                 <a href="second" style="
                     color:  white;
                     text-decoration: none;
@@ -475,17 +511,44 @@
             </button>
             <p></p>
             <div role="button" tabindex="0" data-aa-class="Button" class="ui-button ex ey ez b gf fd bj dv au at bl fe bn ff eb bi fg du fh fi fj fk av aw ax ay gg gh gi gj gk bt gl gm gn go gp fo gq gr gs gt gu gv fq bu bz ca cb cc cd ce cf cg ch ci cj cl cm cn co cp cq fr fs ft fu cv cw cx cy cz da db dc dd de df dg dh di dj dk dl fv fw fx fy gw gx gy gz ha hb hc hd" data-builder-id="3v5hbau1gf8">
-                <a href="first"
+                <a href="help"
                    style="
                     color:  #16233A;
                     text-decoration: none;
                 ">
 
                     <span dir="auto" class="ui-button__content ga gb gc bk gd ge">Get Help</span>
-                    </a>
+                </a>
             </div>
+            <div style="
+    background: white;
+    border: black;
+    border-width: 1px;
+    border-style: solid;
+    padding: 16px;
+    width: 200px;">
+                <div class="category" style="margin-top: 0px">Bankruptcy</div>
+                <div> <span class="dot red"></span> <span class="person">  Bianca Pisani</span> </div>
+                <div> <span class="dot green"></span> <span class="person">  Gerhart Moller</span> </div>
+                <div> <span class="dot yellow"></span> <span class="person">  Lee Gu</span> </div>
+
+                <div class="category"> Derivatives </div>
+                <div> <span class="dot green"></span> <span class="person">  Brian Johnson</span> </div>
+                <div> <span class="dot yellow"></span> <span class="person">  Deborah Berger</span> </div>
+
+                <div class="category">Risk management </div>
+                <div> <span class="dot red"></span> <span class="person">  Grady Archie</span> </div>
+                <div> <span class="dot green"></span> <span class="person">  Lidia Holloway</span> </div>
+
+                <div class="category">Tariffs </div>
+                <div> <span class="dot yellow"></span> <span class="person">  Allan Deyoung</span> </div>
+                <div> <span class="dot red"></span> <span class="person">  Mallory Cortez</span> </div>
+                <div> <span class="dot green"></span> <span class="person">  Patty Fernandez</span> </div>
+            </div>
+
         </div>
     </div>
+
 
     <script>
         var x = setInterval(function () {
