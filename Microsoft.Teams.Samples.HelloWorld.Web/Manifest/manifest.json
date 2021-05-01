@@ -1,173 +1,173 @@
 {
-    "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.9/MicrosoftTeams.schema.json",
-    "manifestVersion": "1.9",
-    "version": "1.0.15",
-    "id": "55cbeb0e-e7be-4ab3-b9bf-ef919406a84a",
-    "packageName": "com.contoso.helloworldngrok",
-    "developer": {
-        "name": "Contoso",
-        "websiteUrl": "https://www.microsoft.com",
-        "privacyUrl": "https://www.microsoft.com/privacy",
-        "termsOfUseUrl": "https://www.microsoft.com/termsofuse"
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.9/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.9",
+  "version": "1.0.15",
+  "id": "55cbeb0e-e7be-4ab3-b9bf-ef919406a84a",
+  "packageName": "com.contoso.helloworldngrok",
+  "developer": {
+    "name": "Contoso",
+    "websiteUrl": "https://www.microsoft.com",
+    "privacyUrl": "https://www.microsoft.com/privacy",
+    "termsOfUseUrl": "https://www.microsoft.com/termsofuse"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "cTrade",
+    "full": "Contoso Trade"
+  },
+  "description": {
+    "short": "Trade stocks and bonds",
+    "full": "Trade stocks and bonds, with no limit on volume."
+  },
+  "accentColor": "#60A18E",
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://qna.ngrok.io/configure",
+      "canUpdateConfiguration": false,
+      "scopes": [
+        "team",
+        "groupchat"
+      ],
+      "context": [
+        "channelTab",
+        "privateChatTab",
+        "meetingSidePanel",
+        "meetingDetailsTab",
+        "meetingChatTab"
+      ]
+    }
+  ],
+  "staticTabs": [
+    {
+      "entityId": "com.contoso.helloworld.hellotab",
+      "name": "FBKM",
+      "contentUrl": "https://qna.ngrok.io/first",
+      "scopes": [
+        "personal"
+      ]
     },
-    "icons": {
-        "color": "color.png",
-        "outline": "outline.png"
+    {
+      "entityId": "conversations",
+      "scopes": [
+        "personal"
+      ]
     },
-    "name": {
-        "short": "cTrade",
-        "full": "Contoso Trade"
-    },
-    "description": {
-        "short": "Trade stocks and bonds",
-        "full": "Trade stocks and bonds, with no limit on volume."
-    },
-    "accentColor": "#60A18E",
-    "configurableTabs": [
+    {
+      "entityId": "about",
+      "scopes": [
+        "personal"
+      ]
+    }
+  ],
+  "bots": [
+    {
+      "botId": "cb38cf54-ac89-4a7a-9ea3-095d3d080037",
+      "scopes": [
+        "team",
+        "groupchat",
+        "personal"
+      ],
+      "commandLists": [
         {
-            "configurationUrl": "https://qna.ngrok.io/configure",
-            "canUpdateConfiguration": false,
-            "scopes": [
-                "team",
-                "groupchat"
-            ],
-            "context": [
-                "channelTab",
-                "privateChatTab",
-                "meetingSidePanel",
-                "meetingDetailsTab",
-                "meetingChatTab"
-            ]
-        }
-    ],
-    "staticTabs": [
-        {
-            "entityId": "com.contoso.helloworld.hellotab",
-            "name": "FBKM",
-            "contentUrl": "https://qna.ngrok.io/first",
-            "scopes": [
-                "personal"
-            ]
+          "scopes": [
+            "personal"
+          ],
+          "commands": [
+            {
+              "title": "GET /messages",
+              "description": "asdfadsf"
+            },
+            {
+              "title": "meet",
+              "description": "Schedule a meeting"
+            },
+            {
+              "title": "buy",
+              "description": "Buy shares"
+            }
+          ]
         },
         {
-            "entityId": "conversations",
-            "scopes": [
-                "personal"
-            ]
+          "scopes": [
+            "team"
+          ],
+          "commands": [
+            {
+              "title": "GET /messages",
+              "description": "asdfadsf"
+            },
+            {
+              "title": "meet",
+              "description": "Schedule a meeting"
+            },
+            {
+              "title": "buy",
+              "description": "Buy shares"
+            }
+          ]
         },
         {
-            "entityId": "about",
-            "scopes": [
-                "personal"
-            ]
+          "scopes": [
+            "groupchat"
+          ],
+          "commands": [
+            {
+              "title": "GET /messages",
+              "description": "asdfadsf"
+            },
+            {
+              "title": "meet",
+              "description": "Schedule a meeting"
+            },
+            {
+              "title": "buy",
+              "description": "Buy shares"
+            }
+          ]
         }
-    ],
-    "bots": [
+      ],
+      "supportsFiles": false,
+      "isNotificationOnly": false
+    }
+  ],
+  "composeExtensions": [
+    {
+      "botId": "00000000-0000-0000-0000-000000000000",
+      "canUpdateConfiguration": false,
+      "commands": [
         {
-            "botId": "cb38cf54-ac89-4a7a-9ea3-095d3d080037",
-            "scopes": [
-                "team",
-                "groupchat",
-                "personal"
-            ],
-            "commandLists": [
-                {
-                    "scopes": [
-                        "personal"
-                    ],
-                    "commands": [
-                        {
-                            "title": "GET /messages",
-                            "description": "asdfadsf"
-                        },
-                        {
-                            "title": "meet",
-                            "description": "Schedule a meeting"
-                        },
-                        {
-                            "title": "buy",
-                            "description": "Buy shares"
-                        }
-                    ]
-                },
-                {
-                    "scopes": [
-                        "team"
-                    ],
-                    "commands": [
-                        {
-                            "title": "GET /messages",
-                            "description": "asdfadsf"
-                        },
-                        {
-                            "title": "meet",
-                            "description": "Schedule a meeting"
-                        },
-                        {
-                            "title": "buy",
-                            "description": "Buy shares"
-                        }
-                    ]
-                },
-                {
-                    "scopes": [
-                        "groupchat"
-                    ],
-                    "commands": [
-                        {
-                            "title": "GET /messages",
-                            "description": "asdfadsf"
-                        },
-                        {
-                            "title": "meet",
-                            "description": "Schedule a meeting"
-                        },
-                        {
-                            "title": "buy",
-                            "description": "Buy shares"
-                        }
-                    ]
-                }
-            ],
-            "supportsFiles": false,
-            "isNotificationOnly": false
+          "id": "getRandomText",
+          "type": "query",
+          "title": "Get some random text for fun",
+          "description": "Gets some random text and images that you can insert in messages for fun.",
+          "initialRun": true,
+          "fetchTask": false,
+          "context": [
+            "compose",
+            "commandBox"
+          ],
+          "parameters": [
+            {
+              "name": "cardTitle",
+              "title": "Card title",
+              "description": "Card title to use",
+              "inputType": "text"
+            }
+          ]
         }
-    ],
-    "composeExtensions": [
-        {
-            "botId": "00000000-0000-0000-0000-000000000000",
-            "canUpdateConfiguration": false,
-            "commands": [
-                {
-                    "id": "getRandomText",
-                    "type": "query",
-                    "title": "Get some random text for fun",
-                    "description": "Gets some random text and images that you can insert in messages for fun.",
-                    "initialRun": true,
-                    "fetchTask": false,
-                    "context": [
-                        "compose",
-                        "commandBox"
-                    ],
-                    "parameters": [
-                        {
-                            "name": "cardTitle",
-                            "title": "Card title",
-                            "description": "Card title to use",
-                            "inputType": "text"
-                        }
-                    ]
-                }
-            ]
-        }
-    ],
-    "permissions": [
-        "identity",
-        "messageTeamMembers"
-    ],
-    "validDomains": [
-        "qna.ngrok.io",
-        "808e656d.ngrok.io",
-        "nkramerqnaapp.azurewebsites.net"
-    ]
+      ]
+    }
+  ],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "qna.ngrok.io",
+    "808e656d.ngrok.io",
+    "nkramerqnaapp.azurewebsites.net"
+  ]
 }
