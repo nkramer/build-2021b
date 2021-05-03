@@ -264,7 +264,9 @@
     <Content Include="Manifest-NoRSC-Azure\contoso96x96.png" />
     <Content Include="Manifest-NoRSC\contoso20x20.png" />
     <Content Include="Manifest-NoRSC\contoso96x96.png" />
+    <Content Include="Manifest\contoso192x192.png" />
     <Content Include="Manifest\contoso20x20.png" />
+    <Content Include="Manifest\contoso32x32.png" />
     <Content Include="Manifest\contoso96x96.png" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
