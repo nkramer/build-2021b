@@ -51,6 +51,7 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
     public class QandAModelWrapper
     {
+        public bool showHelp = false;
         public QandAModel model;
         public bool useRSC = true;
         public bool showLogin = true;
@@ -315,7 +316,10 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         [Route("help")]
         public async Task<ActionResult> Help()
         {
-                return View("First");
+            var q = new QandAModelWrapper();
+            q.showHelp = true;
+            return View("First", q);
+//            return View("First");
         }
 
         [Route("first")]
@@ -353,6 +357,20 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             {
                 return ShowSignin(usingRSC);
             }
+        }
+
+        [Route("first2")]
+        public async Task<ActionResult> First2(
+            [FromUri(Name = "tenantId")] string tenantId,
+            [FromUri(Name = "teamId")] string teamId,
+            [FromUri(Name = "channelId")] string channelId,
+            [FromUri(Name = "skipRefresh")] Nullable<bool> skipRefresh,
+            [FromUri(Name = "useRSC")] Nullable<bool> useRSC
+            )
+        {
+            var q = new QandAModelWrapper();
+            q.showHelp = true;
+                return View("First", q);
         }
 
         private ActionResult ShowSignin(bool usingRSC)
