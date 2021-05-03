@@ -22,18 +22,27 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web
             {
                 if (activity.GetTextWithoutMentions() != "")
                 {
-                    string token = await GetToken();
-                    GraphServiceClient graph = GetAuthenticatedClient(token);
-                    TeamsConnectorClient teamsConnector = connector.GetTeamsConnectorClient();
-                    string fakeTeamId = activity.GetChannelData<TeamsChannelData>().Team.Id;
-                    string teamId = (await teamsConnector.Teams.FetchTeamDetailsAsync(fakeTeamId)).AadGroupId;
-                    string channelId = activity.GetChannelData<TeamsChannelData>().Channel.Id;
+                    //string token = await GetToken();
+                    //GraphServiceClient graph = GetAuthenticatedClient(token);
+                    //TeamsConnectorClient teamsConnector = connector.GetTeamsConnectorClient();
+                    //string fakeTeamId = activity.GetChannelData<TeamsChannelData>().Team.Id;
+                    //string teamId = (await teamsConnector.Teams.FetchTeamDetailsAsync(fakeTeamId)).AadGroupId;
+                    //string channelId = activity.GetChannelData<TeamsChannelData>().Channel.Id;
 
-                    string messages = await new HttpHelpers(token).HttpGetJson($"/teams/{teamId}/channels/{channelId}/messages");
-                    string msgs = await GetAllMessages(graph, teamId, channelId);
-                    var response = activity.CreateReply("Here you go:\n" + messages);
+                    //string messages = await new HttpHelpers(token).HttpGetJson($"/teams/{teamId}/channels/{channelId}/messages");
+                    //string msgs = await GetAllMessages(graph, teamId, channelId);
+                    //var response = activity.CreateReply("Here you go:\n" + messages);
+                    string[] words = activity.Text.Split(' ');
+                    words[0] = words[0].ToLower();
+                    string reply =
+                        (words[0].StartsWith("meet")) ? "Meeting scheduled for 2pm."
+                        : (words[0].StartsWith("schedule")) ? "Meeting scheduled for 2pm."
+                        : (words[0].StartsWith("buy")) ? $"Bought {words[1]} shares."
+                        : "Huh?";
+
+                    var response = activity.CreateReply(reply);
                     //var response = activity.CreateReply("Bob Smith said:\n" + "See you in Dallas!");
-                    //await connector.Conversations.ReplyToActivityWithRetriesAsync(response);
+                    await connector.Conversations.ReplyToActivityWithRetriesAsync(response);
                 }
 
                 //var reply = activity.CreateReply("You said!: " + activity.GetTextWithoutMentions());

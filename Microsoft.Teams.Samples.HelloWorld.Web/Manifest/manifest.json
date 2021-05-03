@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.9/MicrosoftTeams.schema.json",
   "manifestVersion": "1.9",
-  "version": "1.0.18",
+  "version": "1.0.20",
   "id": "55cbeb0e-e7be-4ab3-b9bf-ef919406a84a",
   "packageName": "com.contoso.helloworldngrok",
   "developer": {
@@ -64,7 +64,7 @@
   ],
   "bots": [
     {
-      "botId": "cb38cf54-ac89-4a7a-9ea3-095d3d080037",
+      "botId": "1dfa35b4-fc6e-4367-a154-6024bfb643ff",
       "scopes": [
         "team",
         "groupchat",
@@ -77,15 +77,11 @@
           ],
           "commands": [
             {
-              "title": "GET /messages",
-              "description": "asdfadsf"
-            },
-            {
-              "title": "meet",
+              "title": "Schedule meeting",
               "description": "Schedule a meeting"
             },
             {
-              "title": "buy",
+              "title": "Buy",
               "description": "Buy shares"
             }
           ]
@@ -95,10 +91,6 @@
             "team"
           ],
           "commands": [
-            {
-              "title": "GET /messages",
-              "description": "asdfadsf"
-            },
             {
               "title": "meet",
               "description": "Schedule a meeting"
@@ -114,10 +106,6 @@
             "groupchat"
           ],
           "commands": [
-            {
-              "title": "GET /messages",
-              "description": "asdfadsf"
-            },
             {
               "title": "meet",
               "description": "Schedule a meeting"
