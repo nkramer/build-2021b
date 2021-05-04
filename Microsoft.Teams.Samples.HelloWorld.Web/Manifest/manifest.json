@@ -19,7 +19,7 @@
     "activityTypes": [
       {
         "type": "sharePriceIncreased",
-        "templateText": "{share_name_acronym} went up {percentage}% ",
+        "templateText": "{share_name_acronym} went up {percentage}%",
         "description": "Increase in share price"
       },
       {
