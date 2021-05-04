@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.9/MicrosoftTeams.schema.json",
   "manifestVersion": "1.9",
-  "version": "1.0.21",
+  "version": "1.0.24",
   "id": "55cbeb0e-e7be-4ab3-b9bf-ef919406a84a",
   "packageName": "com.contoso.helloworldngrok",
   "developer": {
@@ -10,6 +10,26 @@
     "privacyUrl": "https://www.microsoft.com/privacy",
     "termsOfUseUrl": "https://www.microsoft.com/termsofuse"
   },
+
+  "webApplicationInfo": {
+    "id": "971984f9-115c-47b9-9c95-cb7b037c47b3",
+    "resource": "https://contosoapp.com"
+  },
+  "activities": {
+    "activityTypes": [
+      {
+        "type": "sharePriceIncreased",
+        "templateText": "{share_name_acronym} went up {percentage}% ",
+        "description": "Increase in share price"
+      },
+      {
+        "type": "sharePriceDescreased",
+        "templateText": "{share_name_acronym} price decreased by {percentage}% ",
+        "description": "Decrease in share price"
+      }
+    ]
+  },
+
   "icons": {
     "color": "contoso192x192.png",
     "outline": "contoso32x32.png"

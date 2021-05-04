@@ -32,7 +32,9 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web
                     //string messages = await new HttpHelpers(token).HttpGetJson($"/teams/{teamId}/channels/{channelId}/messages");
                     //string msgs = await GetAllMessages(graph, teamId, channelId);
                     //var response = activity.CreateReply("Here you go:\n" + messages);
-                    string[] words = activity.Text.Split(' ');
+                    string input = activity.Text;
+                    input = input.Replace("<at>cTrade</at> ", "");
+                    string[] words = input.Split(' ');
                     words[0] = words[0].ToLower();
                     string reply =
                         (words[0].StartsWith("meet")) ? "Meeting scheduled for 2pm."
