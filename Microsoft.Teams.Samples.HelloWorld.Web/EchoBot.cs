@@ -37,8 +37,8 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web
                     string[] words = input.Split(' ');
                     words[0] = words[0].ToLower();
                     string reply =
-                        (words[0].StartsWith("meet")) ? "Meeting scheduled for 2pm."
-                        : (words[0].StartsWith("schedule")) ? "Meeting scheduled for 2pm."
+                        (words[0].StartsWith("meet")) ? "Meeting scheduled for 4pm."
+                        : (words[0].StartsWith("schedule")) ? "Meeting scheduled for 4pm."
                         : (words[0].StartsWith("buy")) ? $"Bought {words[1]} shares."
                         : "Huh?";
 
