@@ -1,0 +1,181 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.9/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.9",
+  "version": "1.0.24",
+  "id": "55cbeb0e-e7be-4ab3-b9bf-ef919406a84a",
+  "packageName": "com.contoso.helloworldngrok",
+  "developer": {
+    "name": "Contoso",
+    "websiteUrl": "https://www.microsoft.com",
+    "privacyUrl": "https://www.microsoft.com/privacy",
+    "termsOfUseUrl": "https://www.microsoft.com/termsofuse"
+  },
+
+  "webApplicationInfo": {
+    "id": "cf7aada3-8cb6-45a3-888d-bcef4f9bf72c",
+    "resource": "https://contosoapp.com"
+  },
+  "activities": {
+    "activityTypes": [
+      {
+        "type": "sharePriceIncreased",
+        "templateText": "{share_name_acronym} went up {percentage}%",
+        "description": "Increase in share price"
+      },
+      {
+        "type": "sharePriceDescreased",
+        "templateText": "{share_name_acronym} price decreased by {percentage}% ",
+        "description": "Decrease in share price"
+      }
+    ]
+  },
+
+  "icons": {
+    "color": "contoso192x192.png",
+    "outline": "contoso32x32.png"
+  },
+  "name": {
+    "short": "cTrade",
+    "full": "Contoso Trade"
+  },
+  "description": {
+    "short": "Trade stocks and bonds",
+    "full": "Trade stocks and bonds, with no limit on volume."
+  },
+  "accentColor": "#60A18E",
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://d933-24-56-243-8.ngrok.io//configure",
+      "canUpdateConfiguration": false,
+      "scopes": [
+        "team",
+        "groupchat"
+      ],
+      "context": [
+        "channelTab",
+        "privateChatTab",
+        "meetingSidePanel",
+        "meetingDetailsTab",
+        "meetingChatTab"
+      ]
+    }
+  ],
+  "staticTabs": [
+    {
+      "entityId": "com.contoso.helloworld.hellotab",
+      "name": "FBKM",
+      "contentUrl": "https://d933-24-56-243-8.ngrok.io//first2",
+      "scopes": [
+        "personal"
+      ]
+    },
+    {
+      "entityId": "conversations",
+      "scopes": [
+        "personal"
+      ]
+    },
+    {
+      "entityId": "about",
+      "scopes": [
+        "personal"
+      ]
+    }
+  ],
+  "bots": [
+    {
+      "botId": "f15c8441-e2e5-4807-8e0a-3b8609e6e1c1",
+      "scopes": [
+        "team",
+        "groupchat",
+        "personal"
+      ],
+      "commandLists": [
+        {
+          "scopes": [
+            "personal"
+          ],
+          "commands": [
+            {
+              "title": "Schedule meeting",
+              "description": "Schedule a meeting"
+            },
+            {
+              "title": "Buy",
+              "description": "Buy shares"
+            }
+          ]
+        },
+        {
+          "scopes": [
+            "team"
+          ],
+          "commands": [
+            {
+              "title": "meet",
+              "description": "Schedule a meeting"
+            },
+            {
+              "title": "buy",
+              "description": "Buy shares"
+            }
+          ]
+        },
+        {
+          "scopes": [
+            "groupchat"
+          ],
+          "commands": [
+            {
+              "title": "meet",
+              "description": "Schedule a meeting"
+            },
+            {
+              "title": "buy",
+              "description": "Buy shares"
+            }
+          ]
+        }
+      ],
+      "supportsFiles": false,
+      "isNotificationOnly": false
+    }
+  ],
+  "composeExtensions": [
+    {
+      "botId": "00000000-0000-0000-0000-000000000000",
+      "canUpdateConfiguration": false,
+      "commands": [
+        {
+          "id": "getRandomText",
+          "type": "query",
+          "title": "Get some random text for fun",
+          "description": "Gets some random text and images that you can insert in messages for fun.",
+          "initialRun": true,
+          "fetchTask": false,
+          "context": [
+            "compose",
+            "commandBox"
+          ],
+          "parameters": [
+            {
+              "name": "cardTitle",
+              "title": "Card title",
+              "description": "Card title to use",
+              "inputType": "text"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "qna.ngrok.io",
+    "httpsd933-24-56-243-8.ngrok.",
+    "nkramerqnaapp.azurewebsites.net"
+  ]
+}

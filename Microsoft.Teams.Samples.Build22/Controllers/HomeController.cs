@@ -1,18 +1,17 @@
-﻿using Microsoft.Bot.Connector;
-using Microsoft.Graph;
-using System.Linq;
+﻿using Microsoft.Graph;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Net.Http.Headers;
-using System.Threading.Tasks;
-using System.Web.Mvc;
-using FromUriAttribute = System.Web.Http.FromUriAttribute;
-using System.Text.RegularExpressions;
-using System.IO;
-using System.Web;
-using System.Net;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net.Http.Headers;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Web;
+using System.Web.Mvc;
+using static Microsoft.Teams.Samples.HelloWorld.Web.Controllers.HomeController;
+using FromUriAttribute = System.Web.Http.FromUriAttribute;
 
 namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 {
@@ -49,6 +48,16 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         //public string Key => Encode(teamId, channelId, messageId);
     }
 
+    public class ActiveChatsModel
+    {
+        public ActiveChatsModel(IList<Chat> chats)
+        {
+            this.Chats = chats;
+        }
+
+        public IList<Chat> Chats { get; private set; }
+    }
+
     public class QandAModelWrapper
     {
         public bool showHelp = false;
@@ -76,10 +85,16 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
         // As part of creating the Graph Client, this method acquires all the necessary 
         // tokens.
-        public static async Task<GraphServiceClient> GetGraphClient(string userToken)
+        public static async Task<GraphServiceClient> GetGraphClientInAppContext()
         {
-            var tokens = await GetTokens(userToken);
+            var tokens = await GetTokens();
             return GetGraphClientUnsafe(tokens.messagingToken);
+        }
+
+        public static async Task<GraphServiceClient> GetGraphClientInUserContext()
+        {
+            var tokens = await GetTokens();
+            return GetGraphClientUnsafe(tokens.userToken);
         }
 
         //As part of creating the Graph Client, this method acquires all the necessary
@@ -154,13 +169,14 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         }
 
         // This method acquires all the necessary tokens.
-        private static async Task<Tokens> GetTokens(string userToken)
+        private static async Task<Tokens> GetTokens()
         {
-            string tenantId = GetTenant(userToken);
+            string tenantId = GetTenant();
 
+            string newUserToken = await GetUserPermissionToken(tenantId, false);
             string messagingToken = await GetAppPermissionToken(tenantId, false);
 
-            return new Tokens() { userToken = userToken, messagingToken = messagingToken, webhookToken = messagingToken };
+            return new Tokens() { userToken = newUserToken, messagingToken = messagingToken, webhookToken = messagingToken };
         }
 
         private static string GetTokenFromCookie(HttpCookieCollection cookies)
@@ -209,6 +225,11 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             return GetTokenClaim(token, "tid");
         }
 
+        private static string GetTenant()
+        {
+            return ConfigurationManager.AppSettings["TenantId"];
+        }
+
         private static async Task<string> GetAppPermissionToken(string tenant, bool useRSC)
         {
             string appId = GetGraphAppId(useRSC);
@@ -216,6 +237,20 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 
             string response = await HttpHelpers.POST($"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
                     $"grant_type=client_credentials&client_id={appId}&client_secret={appSecret}"
+                    + "&scope=https%3A%2F%2Fgraph.microsoft.com%2F.default");
+            string token = response.Deserialize<TokenResponse>().access_token;
+            return token;
+        }
+
+        private static async Task<string> GetUserPermissionToken(string tenant, bool useRSC)
+        {
+            string appId = GetGraphAppId(useRSC);
+            string appSecret = Uri.EscapeDataString(GetGraphAppPassword(useRSC));
+            string username = GetGraphUserId();
+            string password = GetGraphUserPassword();
+
+            string response = await HttpHelpers.POST($"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
+                    $"grant_type=password&username={username}&password={password}&client_id={appId}&client_secret={appSecret}"
                     + "&scope=https%3A%2F%2Fgraph.microsoft.com%2F.default");
             string token = response.Deserialize<TokenResponse>().access_token;
             return token;
@@ -320,6 +355,18 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             else
                 return ConfigurationManager.AppSettings["GraphNoRSCAppPassword"];
         }
+
+        // Returns the appid for user delegated use
+        public static string GetGraphUserId()
+        {
+            return ConfigurationManager.AppSettings["GraphUsername"];
+        }
+
+        // Returns the appid for user delegated use
+        private static string GetGraphUserPassword()
+        {
+            return ConfigurationManager.AppSettings["GraphPassword"];
+        }
     }
 
     public class AuthModel
@@ -378,20 +425,35 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         }
 
         [Route("first2")]
-        public async Task<ActionResult> First2(
-            [FromUri(Name = "tenantId")] string tenantId,
-            [FromUri(Name = "teamId")] string teamId,
-            [FromUri(Name = "channelId")] string channelId,
-            [FromUri(Name = "skipRefresh")] Nullable<bool> skipRefresh,
-            [FromUri(Name = "useRSC")] Nullable<bool> useRSC
-            )
+        public async Task<ActionResult> First2()
         {
             var q = new QandAModelWrapper();
 
-            string uri = Url.Action("CreateChat", "Chat");
-
             q.showHelp = true;
-                return View("First", q);
+            return View("First", q);
+        }
+
+        [Route("activeChats")]
+        public async Task<ActionResult> ActiveChats()
+        {
+            GraphServiceClient userContextClient = await Authorization.GetGraphClientInUserContext().ConfigureAwait(false);
+
+            IUserChatsCollectionPage chatCollectionPage =
+                await userContextClient.Me.Chats.Request()
+                    .Filter("startswith(topic, 'Help Chat')")
+                    .Expand("members")
+                    .GetAsync()
+                    .ConfigureAwait(false);
+
+            IList<Chat> chats = chatCollectionPage
+                .CurrentPage
+                .Where(chat => !chat.Viewpoint.IsHidden.Value)
+                .Where(chat => chat.Members.CurrentPage.Any(member => (member as AadUserConversationMember).UserId == "82fe7758-5bb3-4f0d-a43f-e555fd399c6f"))
+                .ToList();
+
+            ActiveChatsModel activeChatsModel = new ActiveChatsModel(chats);
+
+            return View("ActiveChats", activeChatsModel);
         }
 
         private ActionResult ShowSignin(bool usingRSC)
@@ -568,27 +630,6 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         }
 
         // Callback
-        [Route("subscription")]
-        [HttpPost]
-        public ActionResult Subscription()
-        {
-            var encodedString = this.Request.QueryString["validationToken"];
-            if (encodedString != null)
-            {
-                // Ack the webhook subscription
-                var decodedString = HttpUtility.UrlDecode(encodedString);
-                var res = new ContentResult() { Content = decodedString, ContentType = "text/plain", ContentEncoding = System.Text.Encoding.UTF8 };
-                return res;
-            }
-            else
-            {
-                // signal clients
-                Broadcaster.Broadcast();
-                return new ContentResult() { Content = "", ContentType = "text/plain", ContentEncoding = System.Text.Encoding.UTF8 };
-            }
-        }
-
-        // Callback
         [Route("webhookLifecyle")]
         [HttpPost]
         public ActionResult WebhookLifecyle()
@@ -738,6 +779,13 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
         public ActionResult Configure()
         {
             return View();
+        }
+
+
+        // Used only for de-serializing JSON
+        public class TokenResponse
+        {
+            public string access_token { get; set; }
         }
     }
 }

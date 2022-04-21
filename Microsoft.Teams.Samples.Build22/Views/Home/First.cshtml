@@ -460,6 +460,68 @@
         .ak ::-webkit-scrollbar-track {
             background: transparent;
         }
+
+        .clickable {
+            cursor: pointer;
+        }
+
+        /* Popup container - can be anything you want */
+        .popup {
+          position: relative;
+          display: inline-block;
+          cursor: pointer;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+        }
+
+        /* The actual popup */
+        .popup .popuptext {
+          visibility: hidden;
+          width: 160px;
+          background-color: rgb(98, 100, 167);
+          color: #fff;
+          text-align: center;
+          font-size: 16px;
+          border-radius: 10px;
+          padding: 10px 0;
+          position: absolute;
+          z-index: 1;
+          bottom: 125%;
+          left: 100%;
+          margin-left: -80px;
+        }
+
+        /* Popup arrow */
+        .popup .popuptext::after {
+          content: "";
+          position: absolute;
+          top: 100%;
+          left: 50%;
+          margin-left: -5px;
+          border-width: 5px;
+          border-style: solid;
+          border-color: #555 transparent transparent transparent;
+        }
+
+        /* Toggle this class - hide and show the popup */
+        .popup .show {
+          visibility: visible;
+          -webkit-animation: fadeIn 1s;
+          animation: fadeIn 1s;
+        }
+
+        /* Add animation (fade in the popup) */
+        @@-webkit-keyframes fadeIn {
+          from {opacity: 0;}
+          to {opacity: 1;}
+        }
+
+        @@keyframes fadeIn {
+          from {opacity: 0;}
+          to {opacity:1 ;}
+        }
     </style>
 
     <style>
@@ -498,7 +560,7 @@
         }
     </style>
 
-    <script src="http://code.jquery.com/jquery-1.10.2.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-1.10.2.min.js" type="text/javascript"></script>
 
     <script>
         function togglemenu() {
@@ -509,11 +571,15 @@
                 x.style.display = "none";
             }
         }
-        function md() {
-            //window.alert("sometext");
-            //microsoftTeams.executeDeepLink("https://teams.microsoft.com/_#/conversations");
-            microsoftTeams.executeDeepLink("https://teams.microsoft.com/l/chat/0/0?users=meganb@m365x332789.onmicrosoft.com");
-            //window.alert("sometext2");
+        function md(chatId) {
+            var deeplink = "https://teams.microsoft.com/l/chat/" + chatId + "/0";
+            microsoftTeams.executeDeepLink(deeplink);
+        }
+
+        // When the user clicks on div, open the popup
+        function showLoadingPopup() {
+            var popup = document.getElementById("myPopup");
+            popup.classList.toggle("show");
         }
 
         function createChat() {
@@ -521,9 +587,11 @@
                 type: "POST",
                 url: '@(Url.Action("CreateChat", "Chat"))',
                 async: true,
-                success: function (msg) {
+                success: function (response) {
+                    md(response.chatId);
                 },
                 error: function () {
+                    alert("error");
                     return "error";
                 }
             });
@@ -562,30 +630,40 @@
     border-width: 1px;
     border-style: solid;
     padding: 16px;
-    width: 200px;"
-                         onmousedown="md()">
+    width: 200px;">
                         @*margin-left: -104px;*@
 
-                        <div class="category" style="margin-top: 0px">Bankruptcy</div>
+                        <div class="clickable category" style="margin-top: 0px">Bankruptcy</div>
                         <div> <span class="dot red"></span> <span class="person">  Bianca Pisani</span> </div>
                         <div> <span class="dot green"></span> <span class="person">  Gerhart Moller</span> </div>
                         <div> <span class="dot yellow"></span> <span class="person">  Lee Gu</span> </div>
 
                         @*<div class="category"> Derivatives </div>
-                            <div> <span class="dot green"></span> <span class="person">  Brian Johnson</span> </div>
-                            <div> <span class="dot yellow"></span> <span class="person">  Deborah Berger</span> </div>*@
+                    <div> <span class="dot green"></span> <span class="person">  Brian Johnson</span> </div>
+                    <div> <span class="dot yellow"></span> <span class="person">  Deborah Berger</span> </div>*@
 
-                        <div class="category">Risk management </div>
+                        <div class="clickable category">Risk management </div>
                         <div> <span class="dot red"></span> <span class="person">  Grady Archie</span> </div>
                         <div> <span class="dot green"></span> <span class="person">  Lidia Holloway</span> </div>
 
-                        <div class="category" onmousedown="createChat()">Tariffs </div>
+                        <div title="Create a help chat with the Tariffs team" class="popup clickable category" onmousedown="showLoadingPopup(); createChat();">Tariffs 
+                            <span class="popuptext" id="myPopup">Creating help chat... Please wait one moment.</span>
+                        </div>
                         <div> <span class="dot yellow"></span> <span class="person">  Allan Deyoung</span> </div>
                         <div> <span class="dot red"></span> <span class="person">  Mallory Cortez</span> </div>
                         <div> <span class="dot green"></span> <span class="person">  Patty Fernandez</span> </div>
                     </div>
                 </div>
             }
+            <p></p>
+            <button data-aa-class="Button" class="ui-button ex ey ez fb fc fd bj dv au at bl fe bn ff eb bi fg du fh fi fj fk av aw ax ay bd be bf bg fl fm fn fo fp fq bu bv bw bx by bz ca cb cc cd ce cf cg ch ci cj cl cm cn co cp cq fr fs ft fu cv cw cx cy cz da db dc dd de df dg dh di dj dk dl fv fw fx fy" data-builder-id="r1s94p84f5r">
+                <a href="activeChats" style="
+                        color:  white;
+                        text-decoration: none;
+                    ">
+                    <span dir="auto" class="ui-button__content ga gb gc bk gd ge">See Help Tickets</span>
+                </a>
+            </button>
         </div>
     </div>
 

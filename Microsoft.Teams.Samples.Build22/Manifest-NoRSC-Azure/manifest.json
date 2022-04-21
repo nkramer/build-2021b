@@ -1,0 +1,124 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.5/MicrosoftTeams.schema.json",
+  "manifestVersion": "devPreview",
+
+  "version": "1.0.3",
+  "id": "42eaaa11-7350-429f-a6ed-ddba0a0b77cd",
+  "packageName": "com.contoso.helloworld-norsc-azure",
+  "developer": {
+    "name": "Contoso",
+    "websiteUrl": "https://www.microsoft.com",
+    "privacyUrl": "https://www.microsoft.com/privacy",
+    "termsOfUseUrl": "https://www.microsoft.com/termsofuse"
+  },
+  "icons": {
+    "outline": "contoso20x20.png",
+    "color": "contoso96x96.png"
+  },
+  "name": {
+    "short": "Q&A Tracker (Azure, NoRSC)",
+    "full": "Q&A Tracker (Azure, NoRSC)"
+  },
+  "description": {
+    "short": "(Azure, NoRSC) Track questions and answers",
+    "full": "(Azure, NoRSC) This app lets you see the questions that have been asked in a channel, and track which ones have been answered."
+  },
+  "accentColor": "#60A18E",
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://nkramerqnaapp.azurewebsites.net/configure?useRSC=false",
+      "canUpdateConfiguration": false,
+      "scopes": [
+        "team"
+      ]
+    }
+  ],
+  "staticTabs": [
+    {
+      "entityId": "com.contoso.helloworld.hellotab",
+      "name": "Hello Tab",
+      "contentUrl": "https://nkramerqnaapp.azurewebsites.net/hello",
+      "scopes": [
+        "personal"
+      ]
+    }
+  ],
+  "bots": [
+    {
+      "botId": "cb38cf54-ac89-4a7a-9ea3-095d3d080037",
+      "scopes": [
+        "team",
+        "groupchat",
+        "personal"
+      ],
+      "commandLists": [
+        {
+          "scopes": [
+            "personal"
+          ],
+          "commands": [
+            {
+              "title": "GET /messages",
+              "description": "asdfadsf"
+            }
+          ]
+        },
+        {
+          "scopes": [
+            "team"
+          ],
+          "commands": [
+            {
+              "title": "GET /messages",
+              "description": "asdfadsf"
+            }
+          ]
+        },
+        {
+          "scopes": [
+            "groupchat"
+          ],
+          "commands": [
+            {
+              "title": "GET /messages",
+              "description": "asdfadsf"
+            }
+          ]
+        }
+      ],
+      "supportsFiles": false,
+      "isNotificationOnly": false
+    }
+  ],
+  "composeExtensions": [
+    {
+      "botId": "00000000-0000-0000-0000-000000000000",
+      "canUpdateConfiguration": false,
+      "commands": [
+        {
+          "id": "getRandomText",
+          "type": "query",
+          "title": "Get some random text for fun",
+          "description": "Gets some random text and images that you can insert in messages for fun.",
+          "initialRun": true,
+          "fetchTask": false,
+          "parameters": [
+            {
+              "name": "cardTitle",
+              "title": "Card title",
+              "description": "Card title to use",
+              "inputType": "text"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "808e656d.ngrok.io"
+  ]
+}
