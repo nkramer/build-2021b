@@ -1,4 +1,6 @@
-﻿@model Microsoft.Teams.Samples.HelloWorld.Web.Controllers.QandAModelWrapper
+﻿@using Microsoft.Graph
+@using System.Globalization
+@model Microsoft.Teams.Samples.HelloWorld.Web.Controllers.ActiveChatsModel
 
 <body style="background-color:red;">
 
@@ -467,60 +469,124 @@
 
         /* Popup container - can be anything you want */
         .popup {
-          position: relative;
-          display: inline-block;
-          cursor: pointer;
-          -webkit-user-select: none;
-          -moz-user-select: none;
-          -ms-user-select: none;
-          user-select: none;
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
-        /* The actual popup */
-        .popup .popuptext {
-          visibility: hidden;
-          width: 160px;
-          background-color: rgb(98, 100, 167);
-          color: #fff;
-          text-align: center;
-          font-size: 16px;
-          border-radius: 10px;
-          padding: 10px 0;
-          position: absolute;
-          z-index: 1;
-          bottom: 125%;
-          left: 100%;
-          margin-left: -80px;
-        }
+            /* The actual popup */
+            .popup .popuptext {
+                visibility: hidden;
+                width: 160px;
+                background-color: rgb(98, 100, 167);
+                color: #fff;
+                text-align: center;
+                font-size: 16px;
+                border-radius: 10px;
+                padding: 10px 0;
+                position: absolute;
+                z-index: 1;
+                bottom: 125%;
+                left: 100%;
+                margin-left: -80px;
+            }
 
-        /* Popup arrow */
-        .popup .popuptext::after {
-          content: "";
-          position: absolute;
-          top: 100%;
-          left: 50%;
-          margin-left: -5px;
-          border-width: 5px;
-          border-style: solid;
-          border-color: #555 transparent transparent transparent;
-        }
+                /* Popup arrow */
+                .popup .popuptext::after {
+                    content: "";
+                    position: absolute;
+                    top: 100%;
+                    left: 50%;
+                    margin-left: -5px;
+                    border-width: 5px;
+                    border-style: solid;
+                    border-color: #555 transparent transparent transparent;
+                }
 
-        /* Toggle this class - hide and show the popup */
-        .popup .show {
-          visibility: visible;
-          -webkit-animation: fadeIn 1s;
-          animation: fadeIn 1s;
-        }
+            /* Toggle this class - hide and show the popup */
+            .popup .show {
+                visibility: visible;
+                -webkit-animation: fadeIn 1s;
+                animation: fadeIn 1s;
+            }
 
         /* Add animation (fade in the popup) */
         @@-webkit-keyframes fadeIn {
-          from {opacity: 0;}
-          to {opacity: 1;}
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         @@keyframes fadeIn {
-          from {opacity: 0;}
-          to {opacity:1 ;}
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .styled-header {
+            margin-top: 20px;
+            margin-left: 5px;
+            color: rgb(50, 49, 48);
+            font-weight: 600;
+            font-size: 14px;
+            font-family: 'Segoe UI Web (West European)', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+            text-align: left;
+        }
+
+        .data-table {
+            margin-left: 5px;
+            position: relative;
+            height: 48px;
+            min-height: 48px;
+            white-space: nowrap;
+            background-color: #fff;
+            border-bottom: 1px solid #f3f2f1;
+            box-shadow: 0 2px 4px rgb(37 36 36 / 10%);
+            z-index: 2;
+            -webkit-font-smoothing: antialiased;
+            color: #252424;
+            font-family: 'Segoe UI Web (West European)', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+            font-size: 12px;
+            border-bottom-color: rgb(243, 242, 241);
+            border-bottom-style: solid;
+            border-bottom-width: 1px;
+            width: 540px;
+        }
+
+        .data-table th, .data-table tr td {
+            margin-left: 5px;
+            font-family: 'Segoe UI Web (West European)', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+            font-size: 12px;
+            font-weight: 400;
+            padding-top: 6px;
+            padding-bottom: 6px;
+            padding-left: 12px;
+            padding-right: 12px;
+            border-bottom-color: rgb(243, 242, 241);
+            border-bottom-style: solid;
+            border-bottom-width: 1px;
+            text-align: left;
+            height: 48px;
+        }
+
+        .data-table tr td {
+            margin-left: 5px;
+            font-family: 'Segoe UI Web (West European)', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            height: 48px;
         }
     </style>
 
@@ -571,6 +637,12 @@
                 x.style.display = "none";
             }
         }
+
+        function removeRow(id) {
+            var x = document.getElementById(id);
+            x.style.display = "none";
+        }
+
         function md(chatId) {
             var deeplink = "https://teams.microsoft.com/l/chat/" + chatId + "/0";
             microsoftTeams.executeDeepLink(deeplink);
@@ -596,10 +668,31 @@
                 }
             });
         }
+
+        function closeChat(chatId) {
+            jQuery.ajax({
+                type: "POST",
+                url: '@(Url.Action("CloseChat", "CloseChat"))',
+                data: { chatId: chatId },
+                async: true,
+                success: function (msg) {
+                },
+                error: function () {
+                    alert("error");
+                    return "error";
+                }
+            });
+        }
+
+        $('table').each(function () {
+            if ($(this).find('tr').children("td").length < 1) {
+                $(this).hide();
+            }
+        });
     </script>
 
     <div class="flex-container" style="  display: flex;">
-        <img src="content/mockup.png" height="500" width="548" />
+        <img src="content/mockup.png" height="425" width="548" />
         <div data-builder-id="builder-root" style="margin-left:30px; margin-top:5px">
             <button data-aa-class="Button" class="ui-button ex ey ez fb fc fd bj dv au at bl fe bn ff eb bi fg du fh fi fj fk av aw ax ay bd be bf bg fl fm fn fo fp fq bu bv bw bx by bz ca cb cc cd ce cf cg ch ci cj cl cm cn co cp cq fr fs ft fu cv cw cx cy cz da db dc dd de df dg dh di dj dk dl fv fw fx fy" data-builder-id="r1s94p84f5r">
                 <a href="second" style="
@@ -621,51 +714,72 @@
                     <span dir="auto" class="ui-button__content ga gb gc bk gd ge">Get Help</span>
                 </a>
             </div>
-            @if (true) //(Model.showHelp)
-            {
-                <div id="menu" style="display:none">
-                    <div style="
-    background: white;
-    border: black;
-    border-width: 1px;
-    border-style: solid;
-    padding: 16px;
-    width: 200px;">
-                        @*margin-left: -104px;*@
+            <div id="menu" style="display:none">
+                <div style="
+                        background: white;
+                        border: black;
+                        border-width: 1px;
+                        border-style: solid;
+                        padding: 16px;
+                        width: 200px;">
 
-                        <div class="clickable category" style="margin-top: 0px">Bankruptcy</div>
-                        <div> <span class="dot red"></span> <span class="person">  Bianca Pisani</span> </div>
-                        <div> <span class="dot green"></span> <span class="person">  Gerhart Moller</span> </div>
-                        <div> <span class="dot yellow"></span> <span class="person">  Lee Gu</span> </div>
+                    <div class="clickable category" style="margin-top: 0px">Bankruptcy</div>
+                    <div> <span class="dot red"></span> <span class="person">  Bianca Pisani</span> </div>
+                    <div> <span class="dot green"></span> <span class="person">  Gerhart Moller</span> </div>
+                    <div> <span class="dot yellow"></span> <span class="person">  Lee Gu</span> </div>
 
-                        @*<div class="category"> Derivatives </div>
-                    <div> <span class="dot green"></span> <span class="person">  Brian Johnson</span> </div>
-                    <div> <span class="dot yellow"></span> <span class="person">  Deborah Berger</span> </div>*@
+                    <div class="clickable category">Risk management </div>
+                    <div> <span class="dot red"></span> <span class="person">  Grady Archie</span> </div>
+                    <div> <span class="dot green"></span> <span class="person">  Lidia Holloway</span> </div>
 
-                        <div class="clickable category">Risk management </div>
-                        <div> <span class="dot red"></span> <span class="person">  Grady Archie</span> </div>
-                        <div> <span class="dot green"></span> <span class="person">  Lidia Holloway</span> </div>
-
-                        <div title="Create a help chat with the Tariffs team" class="popup clickable category" onmousedown="showLoadingPopup(); createChat();">Tariffs 
-                            <span class="popuptext" id="myPopup">Creating help chat... Please wait one moment.</span>
-                        </div>
-                        <div> <span class="dot yellow"></span> <span class="person">  Allan Deyoung</span> </div>
-                        <div> <span class="dot red"></span> <span class="person">  Mallory Cortez</span> </div>
-                        <div> <span class="dot green"></span> <span class="person">  Patty Fernandez</span> </div>
+                    <div title="Create a help chat with the Tariffs team" class="popup clickable category" onmousedown="showLoadingPopup(); createChat();">
+                        Tariffs
+                        <span class="popuptext" id="myPopup">Creating help chat... Please wait one moment.</span>
                     </div>
+                    <div> <span class="dot yellow"></span> <span class="person">  Allan Deyoung</span> </div>
+                    <div> <span class="dot red"></span> <span class="person">  Mallory Cortez</span> </div>
+                    <div> <span class="dot green"></span> <span class="person">  Patty Fernandez</span> </div>
                 </div>
-            }
-            <p></p>
-            <button data-aa-class="Button" class="ui-button ex ey ez fb fc fd bj dv au at bl fe bn ff eb bi fg du fh fi fj fk av aw ax ay bd be bf bg fl fm fn fo fp fq bu bv bw bx by bz ca cb cc cd ce cf cg ch ci cj cl cm cn co cp cq fr fs ft fu cv cw cx cy cz da db dc dd de df dg dh di dj dk dl fv fw fx fy" data-builder-id="r1s94p84f5r">
-                <a href="activeChats" style="
-                        color:  white;
-                        text-decoration: none;
-                    ">
-                    <span dir="auto" class="ui-button__content ga gb gc bk gd ge">See Help Tickets</span>
-                </a>
-            </button>
+            </div>
         </div>
     </div>
+
+    <h1 class="styled-header">
+        Active Ticket Chats
+    </h1>
+
+    <table id="tblCustomers" class="data-table">
+        <thead>
+            <tr>
+                <th>Chat Name</th>
+                <th>Help Team</th>
+                <th>Actions</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                if (Model.Chats.Count == 0)
+                {
+                    <tr>
+                        <td style="width:150px">No active tickets at this time.</td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (Chat chat in Model.Chats)
+                    {
+                        string id = "closeChat" + chat.Id;
+                        <tr id="@id">
+                            <td style="width:150px">@chat.Topic</td>
+                            <td style="width:150px">Tariffs</td>
+                            <td style="width:150px"><input class="ui-button ex ey ez b gf fd bj dv au at bl fe bn ff eb bi fg du fh fi fj fk av aw ax ay gg gh gi gj gk bt gl gm gn go gp fo gq gr gs gt gu gv fq bu bz ca cb cc cd ce cf cg ch ci cj cl cm cn co cp cq fr fs ft fu cv cw cx cy cz da db dc dd de df dg dh di dj dk dl fv fw fx fy gw gx gy gz ha hb hc hd" type="button" data-id="@chat.Id" id="@id" value="Close" onclick="closeChat(this.getAttribute('data-id')); removeRow(this.getAttribute('id'))" /></td>
+                        </tr>
+                    }
+                }
+            }
+        </tbody>
+    </table>
 
 
     <script>
@@ -673,35 +787,5 @@
             //                                                window.location.reload(true);
         }, 10 * 1000); // 10s
     </script>
-
-    @*<!--Script references. -->
-        <!--Reference the jQuery library. -->
-        <script src="Scripts/jquery-1.10.2.min.js"></script>
-        <!--Reference the SignalR library. -->
-        <script src="Scripts/jquery.signalR-2.1.2.min.js"></script>
-        <!--Reference the autogenerated SignalR hub script. -->
-        <script src="signalr/hubs"></script>
-        <!--Add script to update the page and send messages.-->
-        <script type="text/javascript">
-            $(function () {
-                // Declare a proxy to reference the hub.
-                var chat = $.connection.chatHub;
-                // Create a function that the hub can call to broadcast messages.
-                chat.client.broadcastMessage = function (name, message) {
-                    window.location.reload(true);
-                };
-                chat.client.update = function () {
-                    window.location.reload(true);
-                };
-
-                // Start the connection.
-                $.connection.hub.start().done(function () {
-                    $('#sendmessage').click(function () {
-                        // Call the Send method on the hub.
-                        chat.server.send("", "");
-                    });
-                });
-            });
-        </script>*@
 
 </body>

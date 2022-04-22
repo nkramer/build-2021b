@@ -387,60 +387,14 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
 //            return View("First");
         }
 
-        [Route("first")]
-        public async Task<ActionResult> First(
-            [FromUri(Name = "tenantId")] string tenantId,
-            [FromUri(Name = "teamId")] string teamId,
-            [FromUri(Name = "channelId")] string channelId,
-            [FromUri(Name = "skipRefresh")] Nullable<bool> skipRefresh,
-            [FromUri(Name = "useRSC")] Nullable<bool> useRSC
-            )
-        {
-            bool usingRSC = (useRSC != false);
-            try
-            {
-                // Do our auth check first
-                GraphServiceClient graph = await Authorization.GetGraphClient(teamId, Request.Cookies, Response.Cookies, usingRSC);
-
-                QandAModel model = GetModel(tenantId, teamId, channelId, "");
-                QandAModelWrapper wrapper = new QandAModelWrapper() {
-                    useRSC = usingRSC,
-                    showLogin = false,
-                    model = model
-                };
-
-                if (skipRefresh != true)
-                {
-                    await RefreshQandA(model, graph);
-                    GraphServiceClient graphForWebhooks = await Authorization.GetGraphClientForCreatingWebhooks(teamId, Request.Cookies, Response.Cookies, usingRSC);
-                    await CreateSubscription(channelId, model, graphForWebhooks);
-                }
-                ViewBag.MyModel = model;
-                return View("First", wrapper);
-            }
-            catch (Exception e) when (e.Message.Contains("Unauthorized") || e.Message.Contains("Access token has expired."))
-            {
-                return ShowSignin(usingRSC);
-            }
-        }
-
         [Route("first2")]
-        public async Task<ActionResult> First2()
-        {
-            var q = new QandAModelWrapper();
-
-            q.showHelp = true;
-            return View("First", q);
-        }
-
-        [Route("activeChats")]
-        public async Task<ActionResult> ActiveChats()
+        public async Task<ActionResult> First()
         {
             GraphServiceClient userContextClient = await Authorization.GetGraphClientInUserContext().ConfigureAwait(false);
 
             IUserChatsCollectionPage chatCollectionPage =
                 await userContextClient.Me.Chats.Request()
-                    .Filter("startswith(topic, 'Help Chat')")
+                    .Filter("startswith(topic, 'Stock Help')")
                     .Expand("members")
                     .GetAsync()
                     .ConfigureAwait(false);
@@ -448,12 +402,12 @@ namespace Microsoft.Teams.Samples.HelloWorld.Web.Controllers
             IList<Chat> chats = chatCollectionPage
                 .CurrentPage
                 .Where(chat => !chat.Viewpoint.IsHidden.Value)
-                .Where(chat => chat.Members.CurrentPage.Any(member => (member as AadUserConversationMember).UserId == "82fe7758-5bb3-4f0d-a43f-e555fd399c6f"))
+                .Where(chat => chat.Members.CurrentPage.Any(member => (member as AadUserConversationMember).UserId == ConfigurationManager.AppSettings["GraphUserId"]))
                 .ToList();
 
             ActiveChatsModel activeChatsModel = new ActiveChatsModel(chats);
 
-            return View("ActiveChats", activeChatsModel);
+            return View("First", activeChatsModel);
         }
 
         private ActionResult ShowSignin(bool usingRSC)

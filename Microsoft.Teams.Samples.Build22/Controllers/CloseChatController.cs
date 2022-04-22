@@ -2,6 +2,7 @@
 {
     using Microsoft.Graph;
     using Microsoft.Teams.Samples.HelloWorld.Web.Controllers;
+    using System.Configuration;
     using System.Linq;
     using System.Threading.Tasks;
     using System.Web.Mvc;
@@ -18,20 +19,22 @@
         [HttpPost]
         public async Task CloseChat(string chatId)
         {
+            string userId = ConfigurationManager.AppSettings["GraphUserId"];
+
             GraphServiceClient userContextClient = await Authorization.GetGraphClientInUserContext().ConfigureAwait(false);
 
             // Remove self from chat
             IChatMembersCollectionPage members = await userContextClient.Chats[chatId].Members.Request().GetAsync().ConfigureAwait(false);
-            ConversationMember memberToRemove = members.CurrentPage.First(member => (member as AadUserConversationMember).UserId == "82fe7758-5bb3-4f0d-a43f-e555fd399c6f");
+            ConversationMember memberToRemove = members.CurrentPage.First(member => (member as AadUserConversationMember).UserId == userId);
 
             await userContextClient.Chats[chatId].Members[memberToRemove.Id].Request().DeleteAsync().ConfigureAwait(false);
 
             var user = new TeamworkUserIdentity
             {
-                Id = "82fe7758-5bb3-4f0d-a43f-e555fd399c6f"
+                Id = userId
             };
 
-            var tenantId = "2432b57b-0abd-43db-aa7b-16eadd115d34";
+            var tenantId = ConfigurationManager.AppSettings["TenantId"];
 
             // Hide chat from viewpoint
             await userContextClient.Chats[chatId].HideForUser(user, tenantId).Request().PostAsync().ConfigureAwait(false);
