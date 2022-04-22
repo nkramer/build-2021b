@@ -117,6 +117,23 @@
 
             await Task.WhenAll(createMessageTask, installAppToChatTask).ConfigureAwait(false);
 
+            var teamsTab = new TeamsTab
+            {
+                DisplayName = "cTrade",
+                Configuration = new TeamsTabConfiguration
+                {
+                    EntityId = "2DCA2E6C7A10415CAF6B8AB6661B3154",
+                    ContentUrl = "https://d933-24-56-243-8.ngrok.io/first2",
+                    WebsiteUrl = "https://d933-24-56-243-8.ngrok.io/first2",
+                },
+                AdditionalData = new Dictionary<string, object>()
+                {
+                    {"teamsApp@odata.bind", $"https://graph.microsoft.com/beta/appCatalogs/teamsApps/{ConfigurationManager.AppSettings["TeamsAppId"]}"}
+                }
+            };
+
+            await userContextClient.Chats[createdChat.Id].Tabs.Request().AddAsync(teamsTab).ConfigureAwait(false);
+
             return Json(new { success = true, chatId = createdChat.Id });
         }
     }

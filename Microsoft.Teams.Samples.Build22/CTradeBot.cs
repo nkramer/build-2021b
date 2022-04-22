@@ -37,6 +37,9 @@
                         DateTimeOffset meetingStartTime = DateTimeOffset.Parse(words[1]);
                         string chatId = activity.Conversation.Id;
 
+                        var actionResponse = activity.CreateReply($"Ok, scheduling a meeting for {words[1]}...");
+                        await connector.Conversations.ReplyToActivityWithRetriesAsync(actionResponse);
+
                         await ScheduleMeeting(chatId, meetingStartTime).ConfigureAwait(false);
                         reply = $"Meeting scheduled for {words[1]}.";
                     }
@@ -60,25 +63,7 @@
             GraphServiceClient userContextClient = await Authorization.GetGraphClientInUserContext().ConfigureAwait(false);
 
             // Get members of the chat where bot is located
-            IChatMembersCollectionPage chatMembers = await userContextClient.Chats[chatId].Members.Request().GetAsync().ConfigureAwait(false);
-
-            List<Attendee> eventAttendees = new List<Attendee>();
-
-            // Add those members to the event attendees list.
-            foreach (ConversationMember member in chatMembers.CurrentPage)
-            {
-                AadUserConversationMember aadUserConversationMember = member as AadUserConversationMember;
-
-                eventAttendees.Add(new Attendee
-                {
-                    EmailAddress = new EmailAddress
-                    {
-                        Address = aadUserConversationMember.Email,
-                        Name = aadUserConversationMember.DisplayName,
-                    },
-                    Type = AttendeeType.Required
-                });
-            }
+            Task<IChatMembersCollectionPage> getChatMembersTask = userContextClient.Chats[chatId].Members.Request().GetAsync();
 
             Event newEvent = new Event
             {
@@ -98,9 +83,30 @@
                     DateTime = meetingStartTime.AddHours(1).DateTime.ToString(),
                     TimeZone = "Pacific Standard Time"
                 },
-                Attendees = eventAttendees,
                 IsOnlineMeeting = true
             };
+
+            IChatMembersCollectionPage chatMembers = await getChatMembersTask.ConfigureAwait(false);
+
+            List<Attendee> eventAttendees = new List<Attendee>();
+
+            // Add those members to the event attendees list.
+            foreach (ConversationMember member in chatMembers.CurrentPage)
+            {
+                AadUserConversationMember aadUserConversationMember = member as AadUserConversationMember;
+
+                eventAttendees.Add(new Attendee
+                {
+                    EmailAddress = new EmailAddress
+                    {
+                        Address = aadUserConversationMember.Email,
+                        Name = aadUserConversationMember.DisplayName,
+                    },
+                    Type = AttendeeType.Required
+                });
+            }
+
+            newEvent.Attendees = eventAttendees;
 
             await userContextClient.Me.Calendar.Events.Request().AddAsync(newEvent).ConfigureAwait(false);
         }

@@ -588,6 +588,15 @@
             font-weight: 400;
             height: 48px;
         }
+
+        .closeChatText {
+            cursor: pointer;
+            color: rgb(98, 100, 167);
+        }
+
+        .closeChatText:hover {
+            text-decoration: underline;
+        }
     </style>
 
     <style>
@@ -640,7 +649,16 @@
 
         function removeRow(id) {
             var x = document.getElementById(id);
-            x.style.display = "none";
+            var i = x.rowIndex;
+            var helpChatTable = document.getElementById("helpChatTable");
+            helpChatTable.deleteRow(i);
+
+            var numRows = helpChatTable.rows.length;
+
+            if (numRows === 1) {
+                var newRow = helpChatTable.insertRow(1);
+                newRow.insertCell(0).innerHTML = "No active tickets at this time.";
+            }
         }
 
         function md(chatId) {
@@ -684,11 +702,17 @@
             });
         }
 
-        $('table').each(function () {
-            if ($(this).find('tr').children("td").length < 1) {
-                $(this).hide();
-            }
-        });
+        function noActiveChats() {
+            $('table').each(function () {
+                if ($(this).find('tr').children("td").length < 1) {
+                    console.log("Hi");
+                    var newRow = $(this).insertRow(0);
+                    newRow.insertCell(0).innerHTML = "No active tickets at this time.";
+                }
+
+                console.log("Hi2");
+            });
+        }
     </script>
 
     <div class="flex-container" style="  display: flex;">
@@ -734,11 +758,11 @@
 
                     <div title="Create a help chat with the Tariffs team" class="popup clickable category" onmousedown="showLoadingPopup(); createChat();">
                         Tariffs
-                        <span class="popuptext" id="myPopup">Creating help chat... Please wait one moment.</span>
+                        <span class="popuptext" id="myPopup">Creating help chat...</span>
                     </div>
                     <div> <span class="dot yellow"></span> <span class="person">  Allan Deyoung</span> </div>
                     <div> <span class="dot red"></span> <span class="person">  Mallory Cortez</span> </div>
-                    <div> <span class="dot green"></span> <span class="person">  Patty Fernandez</span> </div>
+                    <div> <span class="dot green"></span> <span class="person">  Patti Fernandez</span> </div>
                 </div>
             </div>
         </div>
@@ -748,7 +772,7 @@
         Active Ticket Chats
     </h1>
 
-    <table id="tblCustomers" class="data-table">
+    <table id="helpChatTable" class="data-table">
         <thead>
             <tr>
                 <th>Chat Name</th>
@@ -773,7 +797,7 @@
                         <tr id="@id">
                             <td style="width:150px">@chat.Topic</td>
                             <td style="width:150px">Tariffs</td>
-                            <td style="width:150px"><input class="ui-button ex ey ez b gf fd bj dv au at bl fe bn ff eb bi fg du fh fi fj fk av aw ax ay gg gh gi gj gk bt gl gm gn go gp fo gq gr gs gt gu gv fq bu bz ca cb cc cd ce cf cg ch ci cj cl cm cn co cp cq fr fs ft fu cv cw cx cy cz da db dc dd de df dg dh di dj dk dl fv fw fx fy gw gx gy gz ha hb hc hd" type="button" data-id="@chat.Id" id="@id" value="Close" onclick="closeChat(this.getAttribute('data-id')); removeRow(this.getAttribute('id'))" /></td>
+                            <td style="width:150px"><div class="closeChatText" data-id="@chat.Id" id="@id" onclick="closeChat(this.getAttribute('data-id')); removeRow(this.getAttribute('id'))">Close</div></td>
                         </tr>
                     }
                 }
